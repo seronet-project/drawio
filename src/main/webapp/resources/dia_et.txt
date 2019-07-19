@@ -39,7 +39,6 @@ arrange=Järjesta
 arrow=Nool
 arrows=Nooled
 asNew=Uuena
-atlas=Atlas
 author=Autor
 authorizationRequired=Volitus vajatud
 authorizeThisAppIn=Anna sellele rakendusele volitus {1}:

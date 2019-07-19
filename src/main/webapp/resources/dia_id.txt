@@ -39,7 +39,6 @@ arrange=Susun
 arrow=Panah
 arrows=Panah
 asNew=Baru
-atlas=Atlas
 author=Pemilik
 authorizationRequired=Perlu otorisasi
 authorizeThisAppIn=Otorisasikan apl ini dalam {1}:

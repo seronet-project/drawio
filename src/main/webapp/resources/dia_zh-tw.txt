@@ -39,7 +39,6 @@ arrange=調整
 arrow=箭頭
 arrows=箭頭
 asNew=作為新圖紙
-atlas=輿圖
 author=作者
 authorizationRequired=需要授權
 authorizeThisAppIn=在{1}中授權此應用：

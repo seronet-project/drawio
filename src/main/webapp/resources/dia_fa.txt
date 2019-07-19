@@ -39,7 +39,6 @@ arrange=‫مرتب‌سازی‬
 arrow=‫پیکان‬
 arrows=‫پیکان‌ها‬
 asNew=‫به‌عنوان جدید‬
-atlas=‫اطلس‬
 author=‫مولف‬
 authorizationRequired=‫اجازه مورد نیاز است‬
 authorizeThisAppIn=‫اعطای اجازه به این اپ در {1}:‬

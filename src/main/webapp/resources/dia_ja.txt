@@ -39,7 +39,6 @@ arrange=配置
 arrow=矢印
 arrows=矢印
 asNew=新規
-atlas=アトラス
 author=著者
 authorizationRequired=認証が必要です
 authorizeThisAppIn={1} で認証する:

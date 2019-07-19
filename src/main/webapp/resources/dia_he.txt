@@ -39,7 +39,6 @@ arrange=‫ארגן‬
 arrow=‫חץ‬
 arrows=‫חצים‬
 asNew=‫כחדש‬
-atlas=‫אטלס‬
 author=‫מחבר‬
 authorizationRequired=‫נדרשת הרשאה‬
 authorizeThisAppIn=‫תן הרשאה ליישום זה ב-{1}:‬

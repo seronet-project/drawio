@@ -39,7 +39,6 @@ arrange=Ordne
 arrow=Pil
 arrows=Piler
 asNew=Som ny
-atlas=Atlas
 author=Author
 authorizationRequired=Autorisasjon er påkrevd
 authorizeThisAppIn=Autoriser denne appen i {1}:

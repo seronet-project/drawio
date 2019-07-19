@@ -39,7 +39,6 @@ arrange=배열
 arrow=화살표
 arrows=화살표
 asNew=새로
-atlas=모던
 author=저자
 authorizationRequired=승인이 필요합니다
 authorizeThisAppIn={1}에서 본 프로그램 승인:

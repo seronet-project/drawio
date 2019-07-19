@@ -39,7 +39,6 @@ arrange=调整图形
 arrow=箭头
 arrows=箭头
 asNew=作为新图纸
-atlas=Atlas
 author=作者
 authorizationRequired=需要授权
 authorizeThisAppIn=在{1}里授权此应用软件：

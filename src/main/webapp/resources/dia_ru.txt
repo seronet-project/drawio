@@ -39,7 +39,6 @@ arrange=Расположить
 arrow=Стрелка
 arrows=Стрелки
 asNew=Как новое
-atlas=Атлас
 author=Автор
 authorizationRequired=Требуется авторизация
 authorizeThisAppIn=Авторизуйте это приложение в {1}:

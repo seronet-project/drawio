@@ -39,7 +39,6 @@ arrange=Järjestä
 arrow=Nuoli
 arrows=Nuolet
 asNew=Uutena
-atlas=Atlas
 author=Tekijä
 authorizationRequired=Käyttäjäoikeus vaaditaan
 authorizeThisAppIn=Valtuuta tämä sovellus {1}:

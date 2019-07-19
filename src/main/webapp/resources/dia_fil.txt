@@ -39,7 +39,6 @@ arrange=Isaayos
 arrow=Panuro
 arrows=Mga panuro
 asNew=Bilang bago
-atlas=Atlas
 author=May akda
 authorizationRequired=Kailangan ang pahintulot
 authorizeThisAppIn=Pahintulutan ang app sa {1}:

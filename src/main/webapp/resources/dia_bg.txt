@@ -39,7 +39,6 @@ arrange=Подреждане
 arrow=Стрелка
 arrows=Стрелки
 asNew=Като ново
-atlas=Модерно
 author=Автор
 authorizationRequired=Необходимо е разрешение
 authorizeThisAppIn=Разреши това приложение в {1}:

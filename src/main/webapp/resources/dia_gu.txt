@@ -39,7 +39,6 @@ arrange=Arrange
 arrow=Arrow
 arrows=Arrows
 asNew=As New
-atlas=Atlas
 author=Author
 authorizationRequired=Authorization required
 authorizeThisAppIn=Authorize this app in {1}:

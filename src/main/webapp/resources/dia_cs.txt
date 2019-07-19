@@ -39,7 +39,6 @@ arrange=Uspořádat
 arrow=Šipka
 arrows=Šipky
 asNew=Jako nový
-atlas=Atlas
 author=Autor
 authorizationRequired=Je vyžadována autorizace
 authorizeThisAppIn=Povolit tuto aplikaci v {1}:

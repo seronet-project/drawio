@@ -39,7 +39,6 @@ arrange=Впорядкувати
 arrow=Стрілка
 arrows=Стрілки
 asNew=Як нове
-atlas=Атлас
 author=Автор
 authorizationRequired=Потрібна авторизація
 authorizeThisAppIn=Авторизуйте цей додаток в {1}

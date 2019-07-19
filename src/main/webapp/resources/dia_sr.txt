@@ -39,7 +39,6 @@ arrange=Složi
 arrow=Strelica
 arrows=Strelice
 asNew=Kao novi
-atlas=Moderan
 author=Autor
 authorizationRequired=Potrebna ovlašćenje
 authorizeThisAppIn=Ovlasti ovu aplikaciju u {1}:

@@ -108,8 +108,8 @@ jobs:
           args:
           - -exc
           - |
-            yum update -y
-            yum install ant -y
+            yum update -y -q
+            yum install ant -y -q
             cd seronet-drawio/etc/build
             ant war
             cd ../../..

@@ -39,7 +39,6 @@ arrange=Organiser
 arrow=Flèche
 arrows=Flèches
 asNew=En tant que nouveau
-atlas=Atlas
 author=Auteur
 authorizationRequired=Autorisation requise
 authorizeThisAppIn=Autoriser l'application dans {1}:

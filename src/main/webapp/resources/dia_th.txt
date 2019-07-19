@@ -39,7 +39,6 @@ arrange=จัดการ
 arrow=ลูกศร
 arrows=ลูกศร
 asNew=เหมือนใหม่
-atlas=หนังสือแผนที่
 author=ผู้เขียน
 authorizationRequired=จำเป็นต้องใด้รับการอนุญาตก่อน
 authorizeThisAppIn=อนุญาตแอพพลิเคชั่นนี้ใน {1}:

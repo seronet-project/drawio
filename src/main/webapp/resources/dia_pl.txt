@@ -39,7 +39,6 @@ arrange=Rozmieść
 arrow=Strzałka
 arrows=Strzałki
 asNew=Jako nowy
-atlas=Nowoczesny
 author=Autor
 authorizationRequired=Wymagana autoryzacja
 authorizeThisAppIn=Autoryzuj tę aplikację w {1}: 

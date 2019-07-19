@@ -39,7 +39,6 @@ arrange=‫رتب‬
 arrow=‫سهم‬
 arrows=‫أسهم‬
 asNew=‫كجديد‬
-atlas=‫أطلس‬
 author=Author
 authorizationRequired=‫الترخيص ضروري‬
 authorizeThisAppIn=‫الترخيص لهذا التطبيق في {1}‬

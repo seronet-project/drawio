@@ -39,7 +39,6 @@ arrange=Ordna
 arrow=Pil
 arrows=Pilar
 asNew=Som ny
-atlas=Atlas
 author=Författare
 authorizationRequired=Krav på auktorisering
 authorizeThisAppIn=Auktorisera denna app i {1}:

@@ -39,7 +39,6 @@ arrange=Složi
 arrow=Strijelica
 arrows=Strijelice
 asNew=Kao novo
-atlas=Atlas
 author=Autor
 authorizationRequired=Potrebno odobrenje
 authorizeThisAppIn=Odobri ovu aplikaciju u {1}

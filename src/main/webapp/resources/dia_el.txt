@@ -39,7 +39,6 @@ arrange=Οργάνωση
 arrow=Βέλος
 arrows=Βέλη
 asNew=Ως νέο
-atlas=Atlas
 author=Δημιουργός
 authorizationRequired=Απαιτείται εξουσιοδότηση
 authorizeThisAppIn=Εξουσιοδοτήστε αυτή την εφαρμογή σε {1}:

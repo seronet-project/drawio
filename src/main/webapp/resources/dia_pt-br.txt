@@ -39,7 +39,6 @@ arrange=Ordenar
 arrow=Seta
 arrows=Setas
 asNew=Como novo
-atlas=Atlas
 author=Autor
 authorizationRequired=Autorização necessária
 authorizeThisAppIn=Autorize esse aplicativo em {1}:

@@ -39,7 +39,6 @@ arrange=Organitza
 arrow=Fletxa
 arrows=Fletxes
 asNew=Com a nou
-atlas=Atles
 author=Autor
 authorizationRequired=Cal autorització 
 authorizeThisAppIn=Autoritza aquesta aplicació a {1}:

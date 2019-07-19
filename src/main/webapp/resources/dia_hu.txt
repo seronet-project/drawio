@@ -39,7 +39,6 @@ arrange=Elrendezés
 arrow=Nyíl
 arrows=Nyilak
 asNew=Mint új
-atlas=Modern
 author=Szerző
 authorizationRequired=Engedély szükséges
 authorizeThisAppIn=Engedélyezze ezt az aplikácót itt: {1}

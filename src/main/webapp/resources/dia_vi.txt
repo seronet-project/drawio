@@ -39,7 +39,6 @@ arrange=Sắp xếp
 arrow=Mũi tên
 arrows=Các mũi tên
 asNew=Như mới
-atlas=Thiên thanh
 author=Tác giả
 authorizationRequired=Yêu cầu ủy quyền
 authorizeThisAppIn=Ủy quyền ứng dụng này trong {1}:

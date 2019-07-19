@@ -39,7 +39,6 @@ arrange=Düzenle
 arrow=Ok
 arrows=Oklar
 asNew=Yeni olarak
-atlas=Atlas
 author=Yazar
 authorizationRequired=Yetkilendirme gerekli
 authorizeThisAppIn=Bu uygulamayı şurada yetkilendir {1}:

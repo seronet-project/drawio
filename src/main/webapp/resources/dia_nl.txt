@@ -39,7 +39,6 @@ arrange=Ordenen
 arrow=Pijl
 arrows=Pijlen
 asNew=Als nieuw
-atlas=Atlas
 author=Auteur
 authorizationRequired=Autorisatie vereist
 authorizeThisAppIn=Autoriseer deze app in {1}:

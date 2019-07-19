@@ -39,7 +39,6 @@ arrange=Aranjează
 arrow=Săgeată
 arrows=Săgeți
 asNew=Ca nou
-atlas=Modern
 author=Autor
 authorizationRequired=Autorizarea necesară
 authorizeThisAppIn=Autorizează această aplicaţie în {1}:
