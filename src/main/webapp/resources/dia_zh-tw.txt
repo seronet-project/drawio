@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=右
 rightAlign=向右對齊
 rightToLeft=由右至左
+robot=Robot·one
 rotate=旋轉
 rotateTooltip=點選並拖曳旋轉，或單擊旋轉90度
 rotation=旋轉

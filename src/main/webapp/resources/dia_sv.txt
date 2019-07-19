@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Höger
 rightAlign=Högerjustera
 rightToLeft=Höger till vänster
+robot=Robot·one
 rotate=Rotera
 rotateTooltip=Klicka-och-dra för att rotera, klicka för att rotera 90 grader
 rotation=Rotation

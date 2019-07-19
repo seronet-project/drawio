@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Dreta
 rightAlign=Alinea a la dreta
 rightToLeft=De dreta a esquerra
+robot=Robot·one
 rotate=Gira
 rotateTooltip=Fes clic i arrossega per rotar, fes clic per girar 90 graus
 rotation=Rotació

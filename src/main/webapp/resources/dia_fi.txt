@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Oikea
 rightAlign=Oikea tasaus
 rightToLeft=Oikealta vasemmalle
+robot=Robot·one
 rotate=Kierrä
 rotateTooltip=Klikkaa ja vedä kiertääksesi, klikkaa kääntääksesi 90 astetta
 rotation=Kiertäminen

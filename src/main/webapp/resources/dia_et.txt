@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Parem
 rightAlign=Joonda paremale
 rightToLeft=Paremalt vasakule
+robot=Robot·one
 rotate=Keera
 rotateTooltip=Kliki ja lohista keeramiseks, kliki 90-kraadiseks keeramiseks
 rotation=Keeramine

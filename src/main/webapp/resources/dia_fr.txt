@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Droite
 rightAlign=Aligner à droite
 rightToLeft=Droite à Gauche
+robot=Robot·one
 rotate=Pivoter
 rotateTooltip=Cliquer et glisser pour pivoter, cliquer pour pivoter de 90 degrés
 rotation=Rotation

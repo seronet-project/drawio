@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Phải
 rightAlign=Căn lề phải
 rightToLeft=Phải sang trái
+robot=Robot·one
 rotate=Xoay
 rotateTooltip=Nhấp chuột và kéo để xoay, nhấp chuột để xoay 90 độ
 rotation=Xoay tròn

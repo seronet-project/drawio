@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Vpravo
 rightAlign=Zarovnat vpravo
 rightToLeft=Zprava doleva
+robot=Robot·one
 rotate=Otočit
 rotateTooltip=Klikněte a táhněte pro otočení, klikněte pro otočení o 90 stupňů
 rotation=Otočení

@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Sağ
 rightAlign=Sağa hizala
 rightToLeft=Sağdan sola
+robot=Robot·one
 rotate=Döndür
 rotateTooltip=Döndürmek için tıklayın ve sürükleyin, 90 derece döndürmek için tıklayın
 rotation=Döndürme

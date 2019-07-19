@@ -608,6 +608,7 @@ rhombus=Ruit
 right=Rechts
 rightAlign=Rechts Uitlijnen
 rightToLeft=Rechts naar links
+robot=Robot·one
 rotate=Draaien
 rotateTooltip=Klik en sleep om te draaien, klik om 90 graden te draaien
 rotation=Rotatie

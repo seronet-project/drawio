@@ -255,7 +255,7 @@ var mxSettings =
 				
 				if (mxSettings.settings.ui == null)
 				{
-					mxSettings.settings.ui = '';
+					mxSettings.settings.ui = 'robot';
 				}
 				
 				if (mxSettings.settings.formatWidth == null)

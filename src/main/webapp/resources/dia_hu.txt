@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Jobb
 rightAlign=Jobb igazítás
 rightToLeft=Jobbrol balra
+robot=Robot·one
 rotate=Forgat
 rotateTooltip=Forgatáshoz kattint és húz, 90 fokos fordításhoz kattint
 rotation=Forgatás

@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Dreapta
 rightAlign=Aliniere la dreapta
 rightToLeft=De la dreapta la stânga
+robot=Robot·one
 rotate=Rotire
 rotateTooltip=”click and drag” pentru a roti, click pentru a întoarce la 90 de grade.
 rotation=Rotație

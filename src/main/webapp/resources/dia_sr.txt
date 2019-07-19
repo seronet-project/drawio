@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Desno
 rightAlign=Desno poravnanje
 rightToLeft=Zdesna ulevo
+robot=Robot·one
 rotate=Rotiraj
 rotateTooltip=Klikni i vuci za rotiranje, klikni za okretanje po 90 stepeni
 rotation=Rotacija

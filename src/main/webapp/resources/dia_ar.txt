@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=‫يمين‬
 rightAlign=‫محاذاة إلى اليمين‬
 rightToLeft=‫من اليمين إلى اليسار‬
+robot=Robot·one
 rotate=‫قم بالتدوير‬
 rotateTooltip=‫انقر و اسحب للتدوير, انقر للتدوير بزاوية 90 درجة.‬
 rotation=‫تدوير‬

@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Kanan
 rightAlign=Ihanay sa kanan
 rightToLeft=Kanan papunta ng kaliwa
+robot=Robot·one
 rotate=Paikutin
 rotateTooltip=Pindutin at hilahin para maikot, pindutin para maikot ng 90 degrees
 rotation=Pag-ikot

@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=오른쪽
 rightAlign=오른쪽 정렬
 rightToLeft=우에서 좌로
+robot=Robot·one
 rotate=회전
 rotateTooltip=클릭 후 드래그하여 회전, 클릭하여 90도 회전
 rotation=회전

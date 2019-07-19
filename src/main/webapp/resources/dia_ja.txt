@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=右
 rightAlign=右揃え
 rightToLeft=右から左
+robot=Robot·one
 rotate=90°回転
 rotateTooltip=クリック&ドラッグで回転 / クリックで90°回転
 rotation=回転

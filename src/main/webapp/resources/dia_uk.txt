@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Справа
 rightAlign=Вирівнювання по правому краю
 rightToLeft=Справа наліво
+robot=Robot·one
 rotate=Обернути
 rotateTooltip=Натисніть та перетягніть, щоб обернути, натисніть, щоб повернути на 90 градусів
 rotation=Обертання

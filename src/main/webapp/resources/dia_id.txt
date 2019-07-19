@@ -608,6 +608,7 @@ rhombus=Rhombus
 right=Kanan
 rightAlign=Rata Kanan
 rightToLeft=Kanan ke kiri
+robot=Robot·one
 rotate=Putar
 rotateTooltip=Klik dan seret untuk memutar, klik untuk memutar 90 derajat
 rotation=Rotasi
