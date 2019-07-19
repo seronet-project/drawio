@@ -792,7 +792,7 @@
 						elt.style.cursor = 'pointer';
 						elt.style.right = '17px';
 						
-						if (uiTheme == 'atlas')
+						if (uiTheme == 'robot')
 						{
 							elt.style.top = '6px';
 							elt.style.right = '15px';
@@ -821,7 +821,7 @@
 							elt.appendChild(icon);
 							mxUtils.setOpacity(elt, 40);
 							
-							if (uiTheme == 'atlas' || uiTheme == 'dark')
+							if (uiTheme == 'robot' || uiTheme == 'dark')
 							{
 								elt.style.opacity = '0.85';
 								elt.style.filter = 'invert(100%)';
@@ -2056,7 +2056,7 @@
 				editorUi.alert(mxResources.get('restartForChangeRequired'));
 			}, parent);
 			
-			if (theme != 'kennedy' && theme != 'atlas' &&
+			if (theme != 'kennedy' && theme != 'robot' &&
 				theme != 'dark' && theme != 'min')
 			{
 				menu.addCheckmark(item, Editor.checkmarkImage);
@@ -2088,14 +2088,14 @@
 				menu.addCheckmark(item, Editor.checkmarkImage);
 			}
 			
-			item = menu.addItem(mxResources.get('atlas'), null, function()
+			item = menu.addItem(mxResources.get('robot'), null, function()
 			{
-				mxSettings.setUi('atlas');
+				mxSettings.setUi('robot');
 				mxSettings.save();
 				editorUi.alert(mxResources.get('restartForChangeRequired'));
 			}, parent);
 			
-			if (theme == 'atlas')
+			if (theme == 'robot')
 			{
 				menu.addCheckmark(item, Editor.checkmarkImage);
 			}

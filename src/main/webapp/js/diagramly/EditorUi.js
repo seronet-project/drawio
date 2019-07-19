@@ -12,7 +12,7 @@
 	/**
 	 * Overrides compact UI setting.
 	 */
-	EditorUi.compactUi = uiTheme != 'atlas';
+	EditorUi.compactUi = uiTheme != 'robot';
 	
 	/**
 	 * Switch to disable logging for mode and search terms.
@@ -3419,9 +3419,9 @@
     
     EditorUi.initTheme = function()
     {
-    	if (uiTheme == 'atlas')
+    	if (uiTheme == 'robot')
     	{
-    		mxClient.link('stylesheet', STYLE_PATH + '/atlas.css');
+    		mxClient.link('stylesheet', STYLE_PATH + '/robot.css');
 
     		if (typeof Toolbar !== 'undefined')
     		{
@@ -10596,7 +10596,7 @@
 						var tmp = document.createElement('span');
 						mxUtils.write(tmp, data.title);
 						
-						if (uiTheme == 'atlas')
+						if (uiTheme == 'robot')
 						{
 							this.buttonContainer.style.paddingRight = '12px';
 							this.buttonContainer.style.paddingTop = '6px';
@@ -10777,7 +10777,7 @@
 			var div = document.createElement('div');
 			div.style.display = 'inline-block';
 			div.style.position = 'absolute';
-			div.style.paddingTop = (uiTheme == 'atlas') ? '2px' : '3px';
+			div.style.paddingTop = (uiTheme == 'robot') ? '2px' : '3px';
 			div.style.paddingLeft = '8px';
 			div.style.paddingBottom = '2px';
 
@@ -10848,7 +10848,7 @@
 			
 			this.toolbar.container.appendChild(div);
 			this.toolbar.staticElements.push(div);
-			div.style.right = (uiTheme != 'atlas') ? '52px' : '42px';
+			div.style.right = (uiTheme != 'robot') ? '52px' : '42px';
 		}
 	};
 

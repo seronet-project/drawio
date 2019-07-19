@@ -12,7 +12,7 @@
 	background-image: linear-gradient(rgb(255, 255, 255) 0px, rgb(242, 242, 242) 100%);
 }
 body .geBigButton {
-	background-color:#0052cc;
+	background-color:#0095ff;
 	background-image:none;
 }
 body .geBigButton:hover {
@@ -58,7 +58,7 @@ html body .geStatus .geStatusAlert {
 	border:none;
 	border-radius:6px;
 	text-shadow: rgb(41, 89, 137) 0px 1px 0px;
-	background-color:#428bca;
+	background-color:#0095ff;
 	background-image:linear-gradient(rgb(70, 135, 206) 0px, rgb(48, 104, 162) 100%);
 	-webkit-box-shadow: rgba(255, 255, 255, 0.0980392) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.2) 0px 1px 1px 0px;
 	-moz-box-shadow: rgba(255, 255, 255, 0.0980392) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.2) 0px 1px 1px 0px;
@@ -66,7 +66,7 @@ html body .geStatus .geStatusAlert {
 	margin-top:-5px;
 }
 html body .geStatus .geStatusAlert:hover {
-    background-color: #2d6ca2;
+    background-color: #0095ff;
     background-image: linear-gradient(rgb(90, 148, 211) 0px, rgb(54, 115, 181) 100%);
 }
 html body .geStatus .geStatusMessage {
@@ -83,7 +83,7 @@ html body .geStatus .geStatusMessage {
 	margin-top:-5px;
 }
 html body .geStatus .geStatusMessage:hover {
-    background-color: #2d6ca2;
+    background-color: #0095ff;
     background-image: linear-gradient(rgb(90, 148, 211) 0px, rgb(54, 115, 181) 100%);
 }
 html body div.mxWindow .geToolbarContainer {
@@ -175,7 +175,7 @@ html body .geToolbarContainer .geLabel {
 	transition: none;
 }
 html body .geMenubarContainer {
-	background-color: #0049B0;
+	background-color: #072734;
 	color: #ffffff;
 	font-size: 14px;
 	padding-top:6px;

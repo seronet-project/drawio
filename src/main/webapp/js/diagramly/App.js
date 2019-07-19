@@ -1487,7 +1487,7 @@ App.prototype.init = function()
 		this.menubar.container.appendChild(this.buttonContainer);
 	}
 
-	if (uiTheme == 'atlas' && this.menubar != null)
+	if (uiTheme == 'robot' && this.menubar != null)
 	{
 		if (this.toggleElement != null)
 		{
@@ -4763,7 +4763,7 @@ App.prototype.updateButtonContainer = function()
 					'background-position:center center;background-repeat:no-repeat;background-image:' +
 					'url(' + Editor.commentImage + ');';
 				
-				if (uiTheme == 'atlas')
+				if (uiTheme == 'robot')
 				{
 					this.commentButton.style.marginRight = '10px';
 					this.commentButton.style.marginTop = '-3px';
@@ -4776,7 +4776,7 @@ App.prototype.updateButtonContainer = function()
 				
 				this.buttonContainer.appendChild(this.commentButton);
 				
-				if (uiTheme == 'dark' || uiTheme == 'atlas')
+				if (uiTheme == 'dark' || uiTheme == 'robot')
 				{
 					this.commentButton.style.filter = 'invert(100%)';
 				}
@@ -5487,10 +5487,10 @@ App.prototype.updateHeader = function()
 		this.toggleFormatElement.style.position = 'absolute';
 		this.toggleFormatElement.style.display = 'inline-block';
 		this.toggleFormatElement.style.top = '8px';
-		this.toggleFormatElement.style.right = (uiTheme != 'atlas' && urlParams['embed'] != '1') ? '30px' : '10px';
+		this.toggleFormatElement.style.right = (uiTheme != 'robot' && urlParams['embed'] != '1') ? '30px' : '10px';
 		this.toggleFormatElement.style.padding = '2px';
 		this.toggleFormatElement.style.fontSize = '14px';
-		this.toggleFormatElement.className = (uiTheme != 'atlas') ? 'geButton' : '';
+		this.toggleFormatElement.className = (uiTheme != 'robot') ? 'geButton' : '';
 		this.toggleFormatElement.style.width = '16px';
 		this.toggleFormatElement.style.height = '16px';
 		this.toggleFormatElement.style.backgroundPosition = '50% 50%';
@@ -5535,10 +5535,10 @@ App.prototype.updateHeader = function()
 		this.fullscreenElement.style.position = 'absolute';
 		this.fullscreenElement.style.display = 'inline-block';
 		this.fullscreenElement.style.top = '8px';
-		this.fullscreenElement.style.right = (uiTheme != 'atlas' && urlParams['embed'] != '1') ? '50px' : '30px';
+		this.fullscreenElement.style.right = (uiTheme != 'robot' && urlParams['embed'] != '1') ? '50px' : '30px';
 		this.fullscreenElement.style.padding = '2px';
 		this.fullscreenElement.style.fontSize = '14px';
-		this.fullscreenElement.className = (uiTheme != 'atlas') ? 'geButton' : '';
+		this.fullscreenElement.className = (uiTheme != 'robot') ? 'geButton' : '';
 		this.fullscreenElement.style.width = '16px';
 		this.fullscreenElement.style.height = '16px';
 		this.fullscreenElement.style.backgroundPosition = '50% 50%';
@@ -5553,8 +5553,8 @@ App.prototype.updateHeader = function()
 			evt.preventDefault();
 		}));
 		
-		// Some style changes in Atlas theme
-		if (uiTheme == 'atlas')
+		// Some style changes in Robot theme
+		if (uiTheme == 'robot')
 		{
 			mxUtils.setOpacity(this.toggleFormatElement, 70);
 			mxUtils.setOpacity(this.fullscreenElement, 70);
@@ -5570,7 +5570,7 @@ App.prototype.updateHeader = function()
 		
 		mxEvent.addListener(this.fullscreenElement, 'click', mxUtils.bind(this, function(evt)
 		{
-			if (uiTheme != 'atlas' && urlParams['embed'] != '1')
+			if (uiTheme != 'robot' && urlParams['embed'] != '1')
 			{
 				this.toggleCompactMode(!collapsed);
 			}
@@ -5624,7 +5624,7 @@ App.prototype.updateHeader = function()
 				mxEvent.consume(evt);
 			}));
 		
-			if (uiTheme != 'atlas')
+			if (uiTheme != 'robot')
 			{
 				this.toolbarContainer.appendChild(this.toggleElement);
 			}
@@ -5704,7 +5704,7 @@ App.prototype.updateUserElement = function()
 			this.userElement.className = 'geItem';
 			this.userElement.style.position = 'absolute';
 			this.userElement.style.fontSize = '8pt';
-			this.userElement.style.top = (uiTheme == 'atlas') ? '8px' : '2px';
+			this.userElement.style.top = (uiTheme == 'robot') ? '8px' : '2px';
 			this.userElement.style.right = '30px';
 			this.userElement.style.margin = '4px';
 			this.userElement.style.padding = '2px';
