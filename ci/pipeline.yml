@@ -1,0 +1,126 @@
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: v1.4.2
+
+resources:
+- name: drawio-staging
+  type: cf
+  icon: cloud-upload
+  source:
+    api: ((cf.api))
+    username: ((cf.username))
+    password: ((cf.password))
+    organization: ((cf.org))
+    space: ((cf.space))
+    skip_cert_check: false
+
+- name: seronet-drawio
+  type: git
+  icon: github-face
+  source:
+    uri: git@github.com:seronet-project/drawio.git
+    branch: master
+    depth: 5
+    disable_ci_skip: false
+    private_key: ((github-private-key))
+
+- name: jgraph-drawio
+  type: git
+  icon: github-face
+  source:
+    uri: https://github.com/jgraph/drawio.git
+    branch: master
+    depth: 30
+
+- name: notify
+  type: slack-notification
+  icon: chat-alert
+  source:
+    url: ((slack-webhook))
+
+- name: merge-timer
+  type: time
+  source:
+    start: 2:30 AM
+    stop: 3:30 AM
+    location: Europe/Berlin
+
+jobs:
+- name: merge-drawio
+  public: false
+  serial_groups: ["drawio"]
+  plan:
+  - get: merge-timer
+    trigger: true
+  - get: jgraph-drawio
+#    trigger: true
+  - get: seronet-drawio
+  - task: merge-drawio-master
+    config:
+      platform: linux
+      inputs:
+      - name: seronet-drawio
+      outputs:
+      - name: seronet-drawio
+      image_resource:
+        type: docker-image
+        source:
+          repository: cloudfoundry/cflinuxfs3
+      run:
+        path: bash
+        args:
+        - -exc
+        - |
+          cd seronet-drawio
+          git config user.email "concourse@sero.network"
+          git config user.name "SeRoNet Concourse"
+          git remote add jgraph https://github.com/jgraph/drawio.git
+          git fetch jgraph master
+          git merge --no-edit jgraph/master
+  - put: seronet-drawio
+    params:
+      repository: seronet-drawio
+
+- name : deploy-drawio
+  serial_groups: ["drawio"]
+  plan:
+    - get: seronet-drawio
+      trigger: true
+    - task: drawio-compile
+      config:
+        platform: linux
+        inputs:
+          - name: seronet-drawio
+        outputs:
+          - name: drawio-out
+          - name: drawio-build
+        image_resource:
+          type: docker-image
+          source:
+            repository: maven
+            tag: 3-jdk-12
+        run:
+          user: root
+          path: sh
+          args:
+          - -exc
+          - |
+            yum update -y
+            yum install ant -y
+            cd seronet-drawio/etc/build
+            ant war
+            cd ../../..
+            cp seronet-drawio/build/draw.war drawio-out/
+            cp seronet-drawio/manifest.yml drawio-out/
+    - put: drawio-staging
+      params:
+        manifest: drawio-out/manifest.yml
+        path: drawio-out/draw.war
+#        environment_variables:
+      on_success:
+        put: notify
+        params:
+          text: "Draw.io deployed."
