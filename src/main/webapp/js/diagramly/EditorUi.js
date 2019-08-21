@@ -1799,8 +1799,7 @@
 			bg = '#ffffff';
 		}
 		
-		var extras = {};
-		extras.globalVars = graph.getExportVariables();
+		var extras = {globalVars: graph.getExportVariables()};
 		
 		if (grid)
 		{
@@ -1808,7 +1807,7 @@
 				size: graph.gridSize,
 				steps: graph.view.gridSteps,
 				color: graph.view.gridColor
-			}
+			};
 		}		
 		
 		return new mxXmlRequest(EXPORT_URL, 'format=' + format + range + allPages +
@@ -8721,10 +8720,19 @@
 			}));
 		}
 		
-		//Add ruler with url only
-		if (urlParams['ruler'] == '1' && typeof mxRuler !== 'undefined')
+		// Adding mxRuler to editor
+		if (typeof window.mxSettings !== 'undefined')
 		{
-			this.ruler = new mxDualRuler(this, this.editor.graph.view.unit);
+			var view = this.editor.graph.view;
+			view.setUnit(mxSettings.getUnit());
+			
+			view.addListener('unitChanged', function(sender, evt)
+			{
+				mxSettings.setUnit(evt.getProperty('unit'));
+				mxSettings.save();		
+			});
+			
+			this.ruler = mxSettings.isRulerOn()? new mxDualRuler(this, view.unit) : null;
 		}
 		
 		// Adds an element to edit the style in the footer in test mode
@@ -12230,9 +12238,7 @@
 					}
 					else 
 					{
-						var extras = {
-							globalVars: graph.getExportVariables()
-						};
+						var extras = {globalVars: graph.getExportVariables()};
 						
 						editorUi.saveRequest(name, format,
 							function(newTitle, base64)
