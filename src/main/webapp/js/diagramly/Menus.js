@@ -320,7 +320,7 @@
 				if (editorUi.pdfPageExport && !noPages)
 				{
 					var allPages = editorUi.addRadiobox(div, 'pages', mxResources.get('allPages'), true);
-					var currentPage = editorUi.addRadiobox(div, 'pages', mxResources.get('currentPage', null, 'Current Page'), false);
+					var currentPage = editorUi.addRadiobox(div, 'pages', mxResources.get('currentPage'), false);
 					var selection = editorUi.addRadiobox(div, 'pages', mxResources.get('selectionOnly'), false, graph.isSelectionEmpty());
 					var crop = editorUi.addCheckbox(div, mxResources.get('crop'), false, true);
 					var grid = editorUi.addCheckbox(div, mxResources.get('grid'), false, false);
@@ -1347,8 +1347,7 @@
 							req.setRequestHeaders = function(request)
 							{
 								mxXmlRequest.prototype.setRequestHeaders.apply(this, arguments);
-								var token = gapi.auth.getToken().access_token;
-								request.setRequestHeader('authorization', 'Bearer ' + token);	
+								request.setRequestHeader('authorization', 'Bearer ' + editorUi.drive.token);	
 							};
 							
 							req.send(function(req)
