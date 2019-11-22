@@ -15,7 +15,7 @@ js/stencils.min.js
 js/extensions.min.js
 js/diagramly/ElectronApp.js
 styles/grapheditor.css
-styles/robot.css
+styles/atlas.css
 styles/dark.css
 favicon.ico
 mxgraph/css/common.css
