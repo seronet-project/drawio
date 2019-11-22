@@ -17,6 +17,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -74,6 +76,12 @@ public class GliffyDiagramConverter
 	private Map<String, GliffyLayer> layers;
 
 	private Pattern rotationPattern = Pattern.compile("rotation=(\\-?\\w+)");
+	
+	private static Pattern lightboxPageIdGliffyMigration =  Pattern.compile("pageId=(.*?)(?=&)");
+	
+	private static Pattern lightboxNameGliffyMigration =  Pattern.compile("name=(.*?)(?=&)");
+	
+	private StringBuilder report;
 
 	/**
 	 * Constructs a new converter and starts a conversion.
@@ -90,7 +98,7 @@ public class GliffyDiagramConverter
 		drawioDiagram.setExtendParents(false);
 		drawioDiagram.setExtendParentsOnAdd(false);
 		drawioDiagram.setConstrainChildren(false);
-
+		this.report = new StringBuilder();
 		start();
 	}
 
@@ -112,10 +120,13 @@ public class GliffyDiagramConverter
 		try
 		{
 			importLayers();
-
 			for (GliffyObject obj : gliffyDiagram.stage.getObjects())
 			{
-				importObject(obj, obj.parent);
+				try {
+					importObject(obj, obj.parent);
+				} catch (Throwable thr) {
+					report.append("-- Warning, Object " + obj.id + " cannot be transformed. Please contact support for more details." + System.lineSeparator());
+				}
 			}
 		}
 		finally
@@ -998,6 +1009,11 @@ public class GliffyDiagramConverter
 		{
 			Document doc = mxDomUtils.createDocument();
 			Element uo = doc.createElement("UserObject");
+
+			Pair<Long, String> lightBox = extractLightboxDataFromGliffyUrl(link);
+			if (lightBox != null) {
+				link = "/plugins/drawio/lightbox.action?ceoId=" + lightBox.getKey() + "&diagramName=" + lightBox.getValue() + ".drawio";
+			}
 			uo.setAttribute("link", link);
 			drawioDiagram.getModel().setValue(cell, uo);
 
@@ -1051,5 +1067,29 @@ public class GliffyDiagramConverter
 		int start = style.indexOf(wrongValue);
 		int end = start + wrongValue.length();
 		style.replace(start, end, correctValue);
+	}
+
+	public Pair<Long, String> extractLightboxDataFromGliffyUrl(String link) {
+		Matcher pagem = lightboxPageIdGliffyMigration.matcher(link);
+		Matcher namem = lightboxNameGliffyMigration.matcher(link);
+		if (pagem.find())
+		{
+			 Long oldPageId = Long.parseLong(pagem.group(1));
+			 if (namem.find()) {
+				 String oldDiagramName = namem.group(1);
+				 return new ImmutablePair<Long, String>(oldPageId, oldDiagramName);
+			 }
+		}
+		return null;
+	}
+	
+	public StringBuilder getReport()
+	{
+		return report;
+	}
+
+	public void setReport(StringBuilder report)
+	{
+		this.report = report;
 	}
 }

@@ -1,4 +1,4 @@
-<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=5,IE=9" ><![endif]-->
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=5" ><![endif]-->
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,9 +17,13 @@
     <meta name="mobile-web-app-capable" content="yes">
 	<meta name="theme-color" content="#d89000">
 	<script type="text/javascript">
-		var mxIsElectron = (window && window.process && window.process.type) || (navigator.userAgent.toLowerCase().indexOf(' electron/') > -1);
-		
+		var mxIsElectron = window && window.process && window.process.type;
 		var mxIsElectron5 = mxIsElectron && parseInt(process.versions.electron) >= 5;
+		var hostName = window.location.hostname;
+		// Supported domains are *.draw.io that draw.io host, or the packaged version in Quip
+		var supportedDomain = (hostName.substring(hostName.length - 8, hostName.length) === '.draw.io') ||
+								(hostName.substring(hostName.length - 17, hostName.length) === '.quipelements.com');
+
 		/**
 		 * URL Parameters and protocol description are here:
 		 *
@@ -82,8 +86,7 @@
 			{
 				var proto = window.location.protocol;
 				
-				// Electron protocol is file:
-				if (proto != 'file:')
+				if (!mxIsElectron)
 				{
 					var host = window.location.host;
 		
@@ -102,6 +105,11 @@
 					{
 						window.location.href = href;
 					}
+				}
+				else if (!mxIsElectron5)
+				{
+					// It's electron, but v3 or lower
+					window.location.href = 'https://about.draw.io/updates-to-draw-io-desktop/';
 				}
 			})();
 		}
@@ -150,8 +158,7 @@
 
 			if (mxIsElectron5)
 			{
-				//TODO Remove unsafe-eval which requires removing dependency on eval in many parts of the code (stencils, styles, decoder, ...) 
-				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io; img-src * data:; media-src *; font-src *', 'Content-Security-Policy');
+				addMeta(null, 'default-src \'self\' \'unsafe-inline\'; connect-src \'self\' https://*.draw.io; img-src * data:; media-src *; font-src *; style-src-elem \'self\' \'unsafe-inline\' https://fonts.googleapis.com', 'Content-Security-Policy');
 			}
 		})();
 	</script>
@@ -228,7 +235,7 @@
 		.geFooterContainer>div#geFooter>img {
 			opacity:0.5;
 			border:1px solid transparent;
-			cusor:pointer;
+			cursor:pointer;
 			margin-top:3px;
 			margin-right:6px;
 			position:absolute;
@@ -343,6 +350,7 @@
 			var geBasePath = mxDevUrl + '/javascript/examples/grapheditor/www/js';
 			var mxBasePath = mxDevUrl + '/javascript/src';
 			
+			mxscript(drawDevUrl + 'js/PreConfig.js');
 			mxscript(drawDevUrl + 'js/diagramly/Init.js');
 			mxscript(geBasePath + '/Init.js');
 			mxscript(mxDevUrl + '/javascript/src/js/mxClient.js');
@@ -351,20 +359,33 @@
 			// required in some browsers to make sure mxClient.js (and the files that it
 			// loads asynchronously) are available when the code loaded in Devel.js runs.
 			mxscript(drawDevUrl + 'js/diagramly/Devel.js');
+			mxscript(drawDevUrl + 'js/PostConfig.js');
 		}
 		else
 		{
+			if (!supportedDomain)
+			{
+				mxscript('js/PreConfig.js');
+			}
+			
 			mxscript('js/app.min.js');
+			
+			if (!supportedDomain)
+			{
+				mxscript('js/PostConfig.js');
+			}
 		}
 
 		// Electron
 		if (mxIsElectron)
 		{
+			mxscript('js/PreConfig.js');
 			mxscript('js/diagramly/DesktopLibrary.js');
 			mxscript('js/diagramly/ElectronApp.js');
 			mxscript('js/extensions.min.js');
 			mxscript('js/stencils.min.js');
 			mxscript('js/shapes.min.js');
+			mxscript('js/PostConfig.js');
 		}
 		
 		// Adds basic error handling

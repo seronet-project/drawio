@@ -1,7 +1,8 @@
 /**
- * Copyright (c) 2006-2018, JGraph Ltd
- * Copyright (c) 2006-2018, Gaudenz Alder
+ * Copyright (c) 2006-2019, JGraph Ltd
+ * Copyright (c) 2006-2019, draw.io AG
  */
+
 var StorageDialog = function(editorUi, fn, rowLimit)
 {
 	rowLimit = (rowLimit != null) ? rowLimit : 2;
@@ -59,15 +60,12 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 	demo.style.userSelect = 'none';
 	
 	mxUtils.write(demo, mxResources.get('decideLater'));
+	mxUtils.setPrefixedStyle(demo.style, 'transform', 'translate(-50%,0)');
+	demo.style.left = '50%';
 	
 	if (editorUi.isOfflineApp())
 	{
-		demo.style.right = '20px';
-	}
-	else
-	{
-		mxUtils.setPrefixedStyle(demo.style, 'transform', 'translate(-50%,0)');
-		demo.style.left = '50%';
+		demo.style.bottom = '28px';
 	}
 	
 	this.init = function()
@@ -357,26 +355,30 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 	var temp = document.createElement('div');
 	temp.style.marginBottom = '10px';
 	
-	var showMore = document.createElement('a');
-	showMore.style.color = 'gray';
-	showMore.style.fontSize = '12px';
-	showMore.style.cursor = 'pointer';
-	showMore.style.userSelect = 'none';
-	mxUtils.write(showMore, ((StorageDialog.extended) ? mxResources.get('showLess') : mxResources.get('showMore')) + '...');
-	
-	temp.appendChild(showMore);
-	p2.appendChild(temp);
-	p2.appendChild(cb);
-	
-	mxEvent.addListener(showMore, 'click', function(evt)
+	if (!editorUi.isOfflineApp())
 	{
-		container.innerHTML = '';
-		showMore.innerHTML = '';
-		StorageDialog.extended = !StorageDialog.extended;
-		addButtons();
+		var showMore = document.createElement('a');
+		showMore.style.color = 'gray';
+		showMore.style.fontSize = '12px';
+		showMore.style.cursor = 'pointer';
+		showMore.style.userSelect = 'none';
 		mxUtils.write(showMore, ((StorageDialog.extended) ? mxResources.get('showLess') : mxResources.get('showMore')) + '...');
-		mxEvent.consume(evt);
-	});
+		
+		temp.appendChild(showMore);
+		p2.appendChild(temp);
+		
+		mxEvent.addListener(showMore, 'click', function(evt)
+		{
+			container.innerHTML = '';
+			showMore.innerHTML = '';
+			StorageDialog.extended = !StorageDialog.extended;
+			addButtons();
+			mxUtils.write(showMore, ((StorageDialog.extended) ? mxResources.get('showLess') : mxResources.get('showMore')) + '...');
+			mxEvent.consume(evt);
+		});
+	}
+
+	p2.appendChild(cb);
 	
 	var span = document.createElement('span');
 	span.style.color = 'gray';
@@ -388,11 +390,11 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 	
 	var recent = editorUi.getRecent();
 
-	if (recent != null && recent.length > 0)
+	if (!editorUi.isOfflineApp() && recent != null && recent.length > 0)
 	{
 		var recentSelect = document.createElement('select');
 		recentSelect.style.marginTop = '8px';
-		recentSelect.style.width = '140px';
+		recentSelect.style.maxWidth = '170px';
 
 		var titleOption = document.createElement('option');
 		titleOption.setAttribute('value', '');
@@ -634,7 +636,8 @@ var SplashDialog = function(editorUi)
 	
 	var btn = document.createElement('button');
 	btn.className = 'geBigButton';
-	btn.style.overflow = 'hidden';
+	btn.style.fontSize = '18px';
+	btn.style.padding = '10px';
 	btn.style.width = '340px';
 	
 	if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp)
@@ -678,7 +681,8 @@ var SplashDialog = function(editorUi)
 	var btn = document.createElement('button');
 	btn.className = 'geBigButton';
 	btn.style.marginBottom = '22px';
-	btn.style.overflow = 'hidden';
+	btn.style.fontSize = '18px';
+	btn.style.padding = '10px';
 	btn.style.width = '340px';
 	
 	if (mxClient.IS_QUIRKS)
@@ -732,7 +736,7 @@ var SplashDialog = function(editorUi)
 	
 	if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp)
 	{
-		var driveUser = (editorUi.drive != null) ? editorUi.drive.getUser() : null;
+		var driveUsers = (editorUi.drive != null) ? editorUi.drive.getUsersList() : [];
 		
 		function addLogout(logout)
 		{
@@ -759,48 +763,68 @@ var SplashDialog = function(editorUi)
 			buttons.appendChild(link);
 		};
 		
-		if (editorUi.mode == App.MODE_GOOGLE && driveUser != null)
+		if (editorUi.mode == App.MODE_GOOGLE && driveUsers.length > 0)
 		{
-			btn.style.marginBottom = '24px';
-			
-			var link = document.createElement('a');
-			link.setAttribute('href', 'javascript:void(0)');
-			link.style.display = 'inline-block';
-			link.style.marginTop = '6px';
-			mxUtils.write(link, mxResources.get('changeUser') + ' (' + driveUser.displayName + ')');
+			var title = document.createElement('span');
+			title.style.marginTop = '6px';
+			mxUtils.write(title, mxResources.get('changeUser') + ':');
 
 			// Makes room after last big buttons
 			btn.style.marginBottom = '16px';
 			buttons.style.paddingBottom = '18px';
 			
-			mxEvent.addListener(link, 'click', function()
+			buttons.appendChild(title);
+			
+			var usersSelect = document.createElement('select');
+			usersSelect.style.marginLeft = '4px';
+			usersSelect.style.width = '200px';
+			
+			for (var i = 0; i < driveUsers.length; i++)
 			{
-				editorUi.hideDialog();
-				editorUi.drive.clearUserId();
-				editorUi.drive.setUser(null);
-				gapi.auth.signOut();
-
-				// Restores current dialog after clearing user
-				editorUi.setMode(App.MODE_GOOGLE);
-				editorUi.hideDialog();
-				editorUi.showSplash();
+				var option = document.createElement('option');
+				mxUtils.write(option, driveUsers[i].displayName);
+				option.value = i;
+				usersSelect.appendChild(option);
+				//More info (email) about the user in a disabled option
+				option = document.createElement('option');
+				option.innerHTML = '&nbsp;&nbsp;&nbsp;';
+				mxUtils.write(option, '<' + driveUsers[i].email + '>');
+				option.setAttribute('disabled', 'disabled');
+				usersSelect.appendChild(option);
+			}
+			
+			//Add account option
+			var option = document.createElement('option');
+			mxUtils.write(option, mxResources.get('addAccount'));
+			option.value = driveUsers.length;
+			usersSelect.appendChild(option);
+			
+			mxEvent.addListener(usersSelect, 'change', function()
+			{
+				var userIndex = usersSelect.value;
+				var existingAccount = driveUsers.length != userIndex;
 				
-				// FIXME: Does not force showing the auth dialog if only one user is logged in
-				editorUi.drive.authorize(false, mxUtils.bind(this, mxUtils.bind(this, function()
+				if (existingAccount)
 				{
+					editorUi.drive.setUser(driveUsers[userIndex]);
+				}
+				
+				editorUi.drive.authorize(existingAccount, function()
+				{
+					editorUi.setMode(App.MODE_GOOGLE);
 					editorUi.hideDialog();
 					editorUi.showSplash();
-				})), mxUtils.bind(this, function(resp)
+				}, function(resp)
 				{
 					editorUi.handleError(resp, null, function()
 					{
 						editorUi.hideDialog();
 						editorUi.showSplash();
 					});
-				}));
+				}, true);
 			});
-
-			buttons.appendChild(link);
+			
+			buttons.appendChild(usersSelect);
 		}
 		else if (editorUi.mode == App.MODE_ONEDRIVE && editorUi.oneDrive != null)
 		{
@@ -822,7 +846,7 @@ var SplashDialog = function(editorUi)
 			addLogout(function()
 			{
 				editorUi.gitLab.logout();
-				editorUi.openLink('https://gitlab.com/users/sign_out');
+				editorUi.openLink(DRAWIO_GITLAB_URL + '/users/sign_out');
 			});
 		}
 		else if (editorUi.mode == App.MODE_TRELLO && editorUi.trello != null)
@@ -906,6 +930,8 @@ var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, tit
 	text.setAttribute('autocorrect', 'off');
 	text.setAttribute('autocapitalize', 'off');
 	text.setAttribute('spellcheck', 'false');
+	text.style.fontFamily = 'monospace';
+	text.style.wordBreak = 'break-all';
 	text.style.marginTop = '10px';
 	text.style.resize = 'none';
 	text.style.height = '150px';
@@ -1976,11 +2002,10 @@ var BackgroundImageDialog = function(editorUi, applyFn)
 							// Creates one picker and reuses it to avoid polluting the DOM
 							if (editorUi.photoPicker == null)
 							{
-								var token = gapi.auth.getToken().access_token;
 								var picker = new google.picker.PickerBuilder()
 									.setAppId(editorUi.drive.appId)	
 									.setLocale(mxLanguage)
-									.setOAuthToken(token)
+									.setOAuthToken(editorUi.drive.token)
 						            .addView(google.picker.ViewId.PHOTO_UPLOAD);
 								
 								editorUi.photoPicker = picker.setCallback(function(data)
@@ -2031,184 +2056,41 @@ var ParseDialog = function(editorUi, title, defaultType)
 		
 		if (type == 'plantUmlPng' || type == 'plantUmlSvg' || type == 'plantUmlTxt')
 		{
-			var plantUmlServerUrl = (type == 'plantUmlTxt') ? PLANT_URL + '/txt/' :
-				((type == 'plantUmlPng') ? PLANT_URL + '/png/' : PLANT_URL + '/svg/');
-			var graph = editorUi.editor.graph;
-
-			// TODO: Change server to return base64 and accept POST request
 			if (editorUi.spinner.spin(document.body, mxResources.get('inserting')))
 			{
-				function encode64(data)
+				var graph = editorUi.editor.graph;
+				var format = (type == 'plantUmlTxt') ? 'txt' :
+					((type == 'plantUmlPng') ? 'png' : 'svg');
+				editorUi.generatePlantUmlImage(text, format, function(data, w, h)
 				{
-					r = "";
+					editorUi.spinner.stop();
+					var cell = null;
 					
-					for (i = 0; i < data.length; i += 3)
+					graph.getModel().beginUpdate();
+					try
 					{
-						if (i + 2 == data.length)
-						{
-							r += append3bytes(data.charCodeAt(i), data.charCodeAt(i + 1), 0);
-						}
-						else if (i + 1 == data.length)
-						{
-							r += append3bytes(data.charCodeAt(i), 0, 0);
-						}
-						else
-						{
-							r += append3bytes(data.charCodeAt(i), data.charCodeAt(i + 1),
-								data.charCodeAt(i + 2));
-						}
+						cell = (format == 'txt') ?
+							editorUi.insertAsPreText(data, insertPoint.x, insertPoint.y) :
+							graph.insertVertex(null, null, null, insertPoint.x, insertPoint.y,
+								w, h, 'shape=image;noLabel=1;verticalAlign=top;aspect=fixed;imageAspect=0;' +
+								'image=' + editorUi.convertDataUri(data) + ';')
+						graph.setAttributeForCell(cell, 'plantUmlData',
+							JSON.stringify({data: text, format: format}));
+					}
+					finally
+					{
+						graph.getModel().endUpdate();
 					}
 					
-					return r;
-				}
-
-				function append3bytes(b1, b2, b3)
-				{
-					c1 = b1 >> 2;
-					c2 = ((b1 & 0x3) << 4) | (b2 >> 4);
-					c3 = ((b2 & 0xF) << 2) | (b3 >> 6);
-					c4 = b3 & 0x3F;
-					r = "";
-					r += encode6bit(c1 & 0x3F);
-					r += encode6bit(c2 & 0x3F);
-					r += encode6bit(c3 & 0x3F);
-					r += encode6bit(c4 & 0x3F);
-					
-					return r;
-				}
-
-				function encode6bit(b)
-				{
-					if (b < 10)
+					if (cell != null)
 					{
-						return String.fromCharCode(48 + b);
+						graph.setSelectionCell(cell);
+						graph.scrollCellToVisible(cell);
 					}
-					
-					b -= 10;
-					
-					if (b < 26)
-					{
-						return String.fromCharCode(65 + b);
-					}
-					
-					b -= 26;
-					
-					if (b < 26)
-					{
-						return String.fromCharCode(97 + b);
-					}
-					
-					b -= 26;
-					
-					if (b == 0)
-					{
-						return '-';
-					}
-					
-					if (b == 1)
-					{
-						return '_';
-					}
-					
-					return '?';
-				}
-
-				// TODO: Remove unescape, use btoa for compatibility with graph.compress
-				function compress(s)
-				{
-					return encode64(Graph.bytesToString(
-						pako.deflateRaw(unescape(
-						encodeURIComponent(s)))));
-				};
-
-				var xhr = new XMLHttpRequest();
-				xhr.open('GET', plantUmlServerUrl + compress(text), true);
-
-				if (type != 'plantUmlTxt')
-				{
-					xhr.responseType = 'blob';
-				}
-
-				xhr.onload = function(e)
-				{
-					if (this.status >= 200 && this.status < 300)
-					{
-						if (type == 'plantUmlTxt')
-						{
-							editorUi.spinner.stop();
-							graph.setSelectionCell(editorUi.insertAsPreText(
-								this.response, insertPoint.x, insertPoint.y));
-							graph.scrollCellToVisible(graph.getSelectionCell());
-						}
-						else
-						{
-							var reader = new FileReader();
-							reader.readAsDataURL(this.response);
-
-							reader.onloadend = function(e)
-							{
-								var img = new Image();
-
-								img.onload = function()
-								{
-									editorUi.spinner.stop();
-									var w = img.width;
-									var h = img.height;
-
-									// Workaround for 0 image size in IE11
-									if (w == 0 && h == 0)
-									{
-										var data = reader.result;
-										var comma = data.indexOf(',');
-										var svgText = decodeURIComponent(escape(atob(data.substring(comma + 1))));
-										var root = mxUtils.parseXml(svgText);
-										var svgs = root.getElementsByTagName('svg');
-
-										if (svgs.length > 0)
-										{
-											w = parseFloat(svgs[0].getAttribute('width'));
-											h = parseFloat(svgs[0].getAttribute('height'));
-										}
-									}
-
-									graph.getModel().beginUpdate();
-									try
-									{
-										cell = graph.insertVertex(null, null, text, insertPoint.x, insertPoint.y,
-											w, h, 'shape=image;noLabel=1;verticalAlign=top;aspect=fixed;imageAspect=0;' +
-											'image=' + editorUi.convertDataUri(reader.result) + ';');
-									}
-									finally
-									{
-										graph.getModel().endUpdate();
-									}
-
-									graph.setSelectionCell(cell);
-									graph.scrollCellToVisible(graph.getSelectionCell());
-								};
-
-								img.src = reader.result;
-							};
-
-							reader.onerror = function(e)
-							{
-								editorUi.handleError(e);
-							};
-						}
-					}
-					else
-					{
-						editorUi.spinner.stop();
-						editorUi.handleError(e);
-					}
-				};
-
-				xhr.onerror = function(e)
+				}, function(e)
 				{
 					editorUi.handleError(e);
-				};
-
-				xhr.send();
+				});
 			}
 		}
 		else if (type == 'table')
@@ -2321,7 +2203,7 @@ var ParseDialog = function(editorUi, title, defaultType)
 							if (listCell == null)
 							{
 								listCell = new mxCell(lines[i], new mxGeometry(x0, 0, 160, 26 + 4),
-									'swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;swimlaneFillColor=#ffffff;');
+									'swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;');
 								listCell.vertex = true;
 								cells.push(listCell);
 
@@ -2582,11 +2464,11 @@ var ParseDialog = function(editorUi, title, defaultType)
 		}
 		else if (typeSelect.value == 'plantUmlPng')
 		{
-			return '@startuml\nskinparam backgroundcolor transparent\nskinparam shadowing false\nAlice -> Bob: Authentication Request\nBob --> Alice: Authentication Response\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: another authentication Response\n@enduml';
+			return '@startuml\nskinparam backgroundcolor transparent\nskinparam shadowing false\nAlice -> Bob: Authentication Request\nBob --> Alice: Authentication Response\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: Another authentication Response\n@enduml';
 		}
 		else if (typeSelect.value == 'plantUmlSvg' || typeSelect.value == 'plantUmlTxt')
 		{
-			return '@startuml\nskinparam shadowing false\nAlice -> Bob: Authentication Request\nBob --> Alice: Authentication Response\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: another authentication Response\n@enduml';
+			return '@startuml\nskinparam shadowing false\nAlice -> Bob: Authentication Request\nBob --> Alice: Authentication Response\n\nAlice -> Bob: Another authentication Request\nAlice <-- Bob: Another authentication Response\n@enduml';
 		}
 		else
 		{
@@ -3609,13 +3491,15 @@ var NewDialog = function(editorUi, compact, showName, callback, createOnly, canc
 
 /**
  * Constructs a dialog for creating new files from a template URL.
+ * Also used for dialog choosing where to save or export resources
  */
-var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLabel, overrideExtension,
-	allowBrowser, allowTab, helpLink, showDeviceButton, rowLimit, data, mimeType, base64Encoded, hints)
+var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLabel, overrideExtension, allowBrowser,
+	allowTab, helpLink, showDeviceButton, rowLimit, data, mimeType, base64Encoded, hints, hideDialog)
 {
 	overrideExtension = (overrideExtension != null) ? overrideExtension : true;
 	allowBrowser = (allowBrowser != null) ? allowBrowser : true;
 	rowLimit = (rowLimit != null) ? rowLimit : 4;
+	hideDialog = (hideDialog != null) ? hideDialog : true;
 
 	var div = document.createElement('div');
 	div.style.whiteSpace = 'nowrap';
@@ -4037,8 +3921,12 @@ var CreateDialog = function(editorUi, title, createFn, cancelFn, dlgTitle, btnLa
 		
 		if (mode == null || (title != null && title.length > 0))
 		{
-			editorUi.hideDialog();
-			createFn(title, mode);
+			if (hideDialog)
+			{
+				editorUi.hideDialog();
+			}
+			
+			createFn(title, mode, nameInput);
 		};
 	}
 	
@@ -4395,7 +4283,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 	
 	var btns = document.createElement('div');
 	btns.style.marginTop = (mxClient.IS_QUIRKS) ? '22px' : '14px';
-	btns.style.textAlign = 'right';
+	btns.style.textAlign = 'center';
 	
 	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
 	{
@@ -4492,7 +4380,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 	    		linkInput.value = image;
 	    	});
 	    	
-	    	editorUi.showDialog(dlg.container, 200, 185, true, true);
+	    	editorUi.showDialog(dlg.container, 200, 200, true, true);
 			dlg.init();
 		});
 		
@@ -4536,11 +4424,10 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 						// Creates one picker and reuses it to avoid polluting the DOM
 						if (editorUi.photoPicker == null)
 						{
-					    	var token = gapi.auth.getToken().access_token;
 							var picker = new google.picker.PickerBuilder()
 								.setAppId(editorUi.drive.appId)	
 								.setLocale(mxLanguage)
-								.setOAuthToken(token)
+								.setOAuthToken(editorUi.drive.token)
 					            .addView(google.picker.ViewId.PHOTO_UPLOAD);
 							
 							editorUi.photoPicker = picker.setCallback(function(data)
@@ -4628,7 +4515,8 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 	linkInput.setAttribute('placeholder', mxResources.get('dragUrlsHere'));
 	linkInput.setAttribute('type', 'text');
 	linkInput.style.marginTop = '6px';
-	linkInput.style.width = '440px';
+	linkInput.style.width = '100%';
+	linkInput.style.boxSizing = 'border-box';
 	linkInput.style.backgroundImage = 'url(\'' + Dialog.prototype.clearImage + '\')';
 	linkInput.style.backgroundRepeat = 'no-repeat';
 	linkInput.style.backgroundPosition = '100% 50%';
@@ -4668,7 +4556,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 	pageRadio.setAttribute('name', 'current-linkdialog');
 
 	var pageSelect = document.createElement('select');
-	pageSelect.style.width = '420px';
+	pageSelect.style.width = '100%';
 	
 	if (showPages && editorUi.pages != null)
 	{
@@ -4684,7 +4572,6 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 			urlRadio.defaultChecked = true;
 		}
 		
-		linkInput.style.width = '420px';
 		inner.appendChild(urlRadio);
 		inner.appendChild(linkInput);
 		inner.appendChild(cross);
@@ -4839,7 +4726,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 	
 	var btns = document.createElement('div');
 	btns.style.marginTop = '20px';
-	btns.style.textAlign = 'right';
+	btns.style.textAlign = 'center';
 	
 	var helpBtn = mxUtils.button(mxResources.get('help'), function()
 	{
@@ -4926,7 +4813,6 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 					// Creates one picker and reuses it to avoid polluting the DOM
 					if (editorUi.linkPicker == null)
 					{
-					    	var token = gapi.auth.getToken().access_token;
 						var view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
 				        		.setParent('root')
 				        		.setIncludeFolders(true)
@@ -4941,7 +4827,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 						var picker = new google.picker.PickerBuilder()
 							.setAppId(editorUi.drive.appId)	
 							.setLocale(mxLanguage)
-							.setOAuthToken(token)
+							.setOAuthToken(editorUi.drive.token)
 							.enableFeature(google.picker.Feature.SUPPORT_TEAM_DRIVES)
 						    .addView(view)
 							.addView(view2)
@@ -5039,7 +4925,7 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 					var ref = tokens[2];
 					var path = tokens.slice(3, tokens.length).join('/');
 
-					linkInput.value = 'https://gitlab.com/' + org + '/' +
+					linkInput.value = DRAWIO_GITLAB_URL + '/' + org + '/' +
 						repo + '/blob/' + ref + '/' + path;
 					linkInput.focus();
 				}
@@ -5356,6 +5242,10 @@ var RevisionDialog = function(editorUi, revs, restoreFn)
 		else if (name == 'pagenumber')
 		{
 			return realPage + 1;
+		}
+		else if (name == 'pagecount')
+		{
+			return (diagrams != null) ? diagrams.length : 1;
 		}
 		
 		return graphGetGlobalVariable.apply(this, arguments);
@@ -5763,9 +5653,9 @@ var RevisionDialog = function(editorUi, revs, restoreFn)
 									try
 									{
 										var temp = parseInt(pageSelect.value);
-										parseDiagram(diagrams[temp]);
 										currentPage = temp;
 										realPage = currentPage;
+										parseDiagram(diagrams[temp]);
 									}
 									catch (e)
 									{
@@ -6031,6 +5921,10 @@ var DraftDialog = function(editorUi, title, xml, editFn, discardFn, editLabel, d
 		else if (name == 'pagenumber')
 		{
 			return currentPage + 1;
+		}
+		else if (name == 'pagecount')
+		{
+			return (diagrams != null) ? diagrams.length : 1;
 		}
 		
 		return graphGetGlobalVariable.apply(this, arguments);
@@ -6898,6 +6792,8 @@ var AuthDialog = function(editorUi, peer, showRememberOption, fn)
 	button.insertBefore(img, button.firstChild);
 	button.style.marginTop = '6px';
 	button.className = 'geBigButton';
+	button.style.fontSize = '18px';
+	button.style.padding = '14px';
 
 	div.appendChild(hd);
 	div.appendChild(p);
@@ -8389,6 +8285,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 								label.style.cursor = 'text';
 								label.style.color = '';
 								label.setAttribute('contentEditable', 'true');
+								mxUtils.setPrefixedStyle(label.style, 'user-select', 'text');
 								label.focus();
 								document.execCommand('selectAll', false, null);
 								
@@ -9983,10 +9880,560 @@ var BtnDialog = function(editorUi, peer, btnLbl, fn)
 	button.insertBefore(img, button.firstChild);
 	button.style.marginTop = '6px';
 	button.className = 'geBigButton';
+	button.style.fontSize = '18px';
+	button.style.padding = '14px';
 
 	div.appendChild(hd);
 	div.appendChild(p);
 	div.appendChild(button);
 	
 	this.container = div;
+};
+
+/**
+ * Constructs a new font dialog.
+ */
+var FontDialog = function(editorUi, curFontname, curUrl, curType, fn)
+{
+	var row, td, label;
+	
+	var table = document.createElement('table');
+	var tbody = document.createElement('tbody');
+	table.style.marginTop = '8px';
+
+	//System fonts section
+	row = document.createElement('tr');
+	
+	td = document.createElement('td');
+	td.colSpan = 2;
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.fontWeight = 'bold';
+	
+	var sysFontRadio = document.createElement('input');
+	sysFontRadio.style.cssText = 'margin-right:8px;margin-bottom:8px;';
+	sysFontRadio.setAttribute('value', 'sysfonts');
+	sysFontRadio.setAttribute('type', 'radio');
+	sysFontRadio.setAttribute('name', 'current-fontdialog');
+	sysFontRadio.setAttribute('id', 'fontdialog-sysfonts');
+	td.appendChild(sysFontRadio);
+	
+	label = document.createElement('label');
+	label.setAttribute('for', 'fontdialog-sysfonts');
+	mxUtils.write(label, (mxResources.get('sysFonts', null, 'System Fonts')));
+	td.appendChild(label);
+	
+	row.appendChild(td);
+	tbody.appendChild(row);
+	
+	row = document.createElement('tr');
+	
+	td = document.createElement('td');
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.width = '120px';
+	td.style.paddingLeft = '15px';
+	mxUtils.write(td, (mxResources.get('fontname', null, 'Font Name')) + ':');
+
+	row.appendChild(td);
+	
+	var sysFontInput = document.createElement('input');
+	
+	if (curType == 's')
+	{
+		sysFontInput.setAttribute('value', curFontname);
+	}
+	
+	sysFontInput.style.marginLeft = '4px';
+	sysFontInput.style.width = '250px';
+	sysFontInput.className = 'dlg_fontName_s';
+	
+	td = document.createElement('td');
+	td.appendChild(sysFontInput);
+	row.appendChild(td);
+	
+	tbody.appendChild(row);
+
+	//Google fonts section
+	row = document.createElement('tr');
+	
+	td = document.createElement('td');
+	td.colSpan = 2;
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.fontWeight = 'bold';
+	
+	var googleFontRadio = document.createElement('input');
+	googleFontRadio.style.cssText = 'margin-right:8px;margin-bottom:8px;';
+	googleFontRadio.setAttribute('value', 'googlefonts');
+	googleFontRadio.setAttribute('type', 'radio');
+	googleFontRadio.setAttribute('name', 'current-fontdialog');
+	googleFontRadio.setAttribute('id', 'fontdialog-googlefonts');
+	td.appendChild(googleFontRadio);
+	
+	label = document.createElement('label');
+	label.setAttribute('for', 'fontdialog-googlefonts');
+	mxUtils.write(label, (mxResources.get('googleFonts', null, 'Google Fonts')));
+	td.appendChild(label);
+	
+	row.appendChild(td);
+	tbody.appendChild(row);
+	
+	row = document.createElement('tr');
+	
+	td = document.createElement('td');
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.width = '120px';
+	td.style.paddingLeft = '15px';
+	mxUtils.write(td, (mxResources.get('fontname', null, 'Font Name')) + ':');
+
+	row.appendChild(td);
+	
+	var googleFontInput = document.createElement('input');
+
+	if (curType == 'g')
+	{
+		googleFontInput.setAttribute('value', curFontname);
+	}
+	
+	googleFontInput.style.marginLeft = '4px';
+	googleFontInput.style.width = '250px';
+	googleFontInput.className = 'dlg_fontName_g';
+	
+	td = document.createElement('td');
+	td.appendChild(googleFontInput);
+	row.appendChild(td);
+	tbody.appendChild(row);
+	
+	//Generic remote fonts section
+	row = document.createElement('tr');
+	
+	td = document.createElement('td');
+	td.colSpan = 2;
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.fontWeight = 'bold';
+	
+	var webFontRadio = document.createElement('input');
+	webFontRadio.style.cssText = 'margin-right:8px;margin-bottom:8px;';
+	webFontRadio.setAttribute('value', 'webfonts');
+	webFontRadio.setAttribute('type', 'radio');
+	webFontRadio.setAttribute('name', 'current-fontdialog');
+	webFontRadio.setAttribute('id', 'fontdialog-webfonts');
+	td.appendChild(webFontRadio);
+	
+	label = document.createElement('label');
+	label.setAttribute('for', 'fontdialog-webfonts');
+	mxUtils.write(label, (mxResources.get('webfonts', null, 'Web Fonts')));
+	td.appendChild(label);
+	
+	row.appendChild(td);
+	tbody.appendChild(row);
+	
+	row = document.createElement('tr');
+	
+	td = document.createElement('td');
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.width = '120px';
+	td.style.paddingLeft = '15px';
+	mxUtils.write(td, (mxResources.get('fontname', null, 'Font Name')) + ':');
+
+	row.appendChild(td);
+	
+	var webFontInput = document.createElement('input');
+
+	if (curType == 'w')
+	{
+		webFontInput.setAttribute('value', curFontname);
+	}
+	
+	webFontInput.style.marginLeft = '4px';
+	webFontInput.style.width = '250px';
+	webFontInput.className = 'dlg_fontName_w';
+	
+	td = document.createElement('td');
+	td.appendChild(webFontInput);
+	row.appendChild(td);
+	tbody.appendChild(row);
+	
+	row = document.createElement('tr');
+	
+	td = document.createElement('td');
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.width = '120px';
+	td.style.paddingLeft = '15px';
+	mxUtils.write(td, (mxResources.get('fontUrl', null, 'Font URL')) + ':');
+
+	row.appendChild(td);
+	
+	var webFontUrlInput = document.createElement('input');
+	webFontUrlInput.setAttribute('value', curUrl || '');
+	webFontUrlInput.style.marginLeft = '4px';
+	webFontUrlInput.style.width = '250px';
+	webFontUrlInput.className = 'dlg_fontUrl';
+	
+	td = document.createElement('td');
+	td.appendChild(webFontUrlInput);
+	row.appendChild(td);
+	tbody.appendChild(row);
+	
+	this.init = function()
+	{
+		var input = sysFontInput;
+		
+		if (curType == 'g')
+		{
+			input = googleFontInput;
+		}
+		else if (curType == 'w')
+		{
+			input = webFontInput;
+		}
+		
+		input.focus();
+		
+		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+		{
+			input.select();
+		}
+		else
+		{
+			document.execCommand('selectAll', false, null);
+		}
+	};
+
+	row = document.createElement('tr');
+	td = document.createElement('td');
+	td.colSpan = 2;
+	td.style.paddingTop = '20px';
+	td.style.whiteSpace = 'nowrap';
+	td.setAttribute('align', 'right');
+	
+	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
+	{
+		editorUi.hideDialog();
+	});
+	cancelBtn.className = 'geBtn';
+	
+	if (editorUi.editor.cancelFirst)
+	{
+		td.appendChild(cancelBtn);
+	}
+	
+	function validateFn(fontName, fontUrl, type)
+	{
+		var urlPattern = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+		
+		if (fontName == null || fontName.length == 0)
+		{
+			table.querySelector('.dlg_fontName_' + type).style.border = '1px solid red';
+			return false;
+		}
+		
+		if (type == 'w' && !urlPattern.test(fontUrl))
+		{
+			table.querySelector('.dlg_fontUrl').style.border = '1px solid red';
+			return false;
+		}
+		
+		return true;
+	};
+	
+	var okBtn = mxUtils.button(mxResources.get('apply'), function()
+	{
+		var fontName, fontUrl, type;
+		
+		if (sysFontRadio.checked)
+		{
+			fontName = sysFontInput.value;
+			type = 's';
+		}
+		else if (googleFontRadio.checked)
+		{
+			fontName = googleFontInput.value;
+			fontUrl = Editor.GOOGLE_FONTS + encodeURIComponent(fontName).replace(/%20/g, '+');
+			type = 'g';
+		}
+		else if (webFontRadio.checked)
+		{
+			fontName = webFontInput.value;
+			fontUrl = webFontUrlInput.value;
+			type = 'w';
+		}
+		
+		if (validateFn(fontName, fontUrl, type))
+		{
+			fn(fontName, fontUrl, type);
+			editorUi.hideDialog();
+		}
+	});
+	okBtn.className = 'geBtn gePrimaryBtn';
+
+	function enterSubmit(e)
+	{
+		this.style.border = '';
+		
+		if (e.keyCode == 13)
+		{
+			okBtn.click();
+		}
+	};
+	
+	mxEvent.addListener(sysFontInput, 'keypress', enterSubmit);
+	mxEvent.addListener(googleFontInput, 'keypress', enterSubmit);
+	mxEvent.addListener(webFontInput, 'keypress', enterSubmit);
+	mxEvent.addListener(webFontUrlInput, 'keypress', enterSubmit);
+	
+	mxEvent.addListener(sysFontInput, 'focus', function()
+	{
+		sysFontRadio.setAttribute('checked', 'checked');
+		sysFontRadio.checked = true;
+	});
+	
+	mxEvent.addListener(googleFontInput, 'focus', function()
+	{
+		googleFontRadio.setAttribute('checked', 'checked');
+		googleFontRadio.checked = true;
+	});
+
+	mxEvent.addListener(webFontInput, 'focus', function()
+	{
+		webFontRadio.setAttribute('checked', 'checked');
+		webFontRadio.checked = true;
+	});
+
+	mxEvent.addListener(webFontUrlInput, 'focus', function()
+	{
+		webFontRadio.setAttribute('checked', 'checked');
+		webFontRadio.checked = true;
+	});
+
+	td.appendChild(okBtn);
+	
+	if (!editorUi.editor.cancelFirst)
+	{
+		td.appendChild(cancelBtn);
+	}
+
+	row.appendChild(td);
+	tbody.appendChild(row);
+	table.appendChild(tbody);
+	
+	this.container = table;
+};
+
+/* Aspect Dialog
+ * @module drawio/aspect-dialog
+ */
+function AspectDialog(editorUi, pageId, layerIds, okFn, cancelFn)
+{
+	this.aspect = {pageId : pageId || editorUi.pages[0].getId(), layerIds : layerIds || []};
+	var div = document.createElement('div');
+	
+	var title = document.createElement('h5');
+	title.style.margin = '0 0 10px';
+	mxUtils.write(title, mxResources.get('pages'));
+	div.appendChild(title);
+
+	var pagesContainer = document.createElement('div');
+	pagesContainer.className = 'geAspectDlgList';
+	div.appendChild(pagesContainer);
+
+	title = document.createElement('h5');
+	title.style.margin = '0 0 10px';
+	mxUtils.write(title, mxResources.get('layers'));
+	div.appendChild(title);
+
+	var layersContainer = document.createElement('div');
+	layersContainer.className = 'geAspectDlgList';
+	div.appendChild(layersContainer);
+	
+	this.pagesContainer = pagesContainer;
+	this.layersContainer = layersContainer;
+	this.ui = editorUi;
+	
+	var btns = document.createElement('div');
+	btns.style.marginTop = '16px';
+	btns.style.textAlign = 'center';
+	
+	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
+	{
+		editorUi.hideDialog();
+		
+		if (cancelFn != null)
+		{
+			cancelFn();
+		}
+	});
+	
+	cancelBtn.className = 'geBtn';
+	
+	if (editorUi.editor.cancelFirst)
+	{
+		btns.appendChild(cancelBtn);
+	}
+
+	var okBtn = mxUtils.button(mxResources.get('ok'), mxUtils.bind(this, function()
+	{
+		editorUi.hideDialog();
+		okFn({pageId: this.selectedPage, layerIds: Object.keys(this.selectedLayers)});
+	}));
+
+	btns.appendChild(okBtn);
+	okBtn.className = 'geBtn gePrimaryBtn';
+	
+	if (!editorUi.editor.cancelFirst)
+	{
+		btns.appendChild(cancelBtn);
+	}
+
+	okBtn.setAttribute('disabled', 'disabled');
+	this.okBtn = okBtn;
+	div.appendChild(btns);
+	this.container = div;
+};
+
+//Drawing the graph with dialog not visible doesn't get dimensions right. It has to be visible!
+AspectDialog.prototype.init = function()
+{
+	for (var i = 0; i < this.ui.pages.length; i++)
+	{
+		var page = this.ui.updatePageRoot(this.ui.pages[i]);
+
+		this.createPageItem(page.getId(), page.getName(), page.node, page.root);
+	}
+};
+
+AspectDialog.prototype.createViewer = function(container, pageNode, layerId)
+{
+	mxEvent.disableContextMenu(container);
+	container.style.userSelect = 'none';
+
+	var graph = new Graph(container);
+	graph.setTooltips(false);
+	graph.setEnabled(false);
+	graph.setPanning(false);
+	graph.minFitScale = null;
+	graph.maxFitScale = null;
+	graph.centerZoom = true;
+	
+	var node = pageNode.firstElementChild;
+	
+	if (node != null)
+	{
+		var bg = node.getAttribute('background');
+		
+		if (bg == null || bg == '' || bg == mxConstants.NONE)
+		{
+			bg = '#ffffff';
+		}
+		
+		container.style.backgroundColor = bg;
+		
+		var codec = new mxCodec(node.ownerDocument);
+		var model = graph.getModel();
+		codec.decode(node, model);
+		
+		var childCount = model.getChildCount(model.root);
+		
+		var showAll = layerId == null;
+		
+		// handle layers visibility
+		for (var i = 0; i < childCount; i++)
+		{
+			var child = model.getChildAt(model.root, i);
+			model.setVisible(child, showAll || layerId == child.id);
+		}
+
+		graph.maxFitScale = 1;
+		graph.fit(0);
+		graph.center();
+	}
+	
+	return graph;
+};
+
+AspectDialog.prototype.createPageItem = function(pageId, pageName, pageNode, pageRoot)
+{
+	var $listItem = document.createElement('div');
+	$listItem.className = 'geAspectDlgListItem';
+	$listItem.setAttribute('data-page-id', pageId)
+	$listItem.innerHTML = '<div style="max-width: 100%; max-height: 100%;"></div><div class="geAspectDlgListItemText">' + pageName + '</div>';
+	
+	this.pagesContainer.appendChild($listItem);
+	
+	var graph = this.createViewer($listItem.childNodes[0], pageNode);
+	
+	var onClick = mxUtils.bind(this, function()
+	{
+		if (this.selectedItem != null)
+		{
+			this.selectedItem.className = 'geAspectDlgListItem';
+		}
+		
+		this.selectedItem = $listItem;
+		this.selectedPage = pageId;
+		$listItem.className += ' geAspectDlgListItemSelected';
+		this.layersContainer.innerHTML = '';
+		this.selectedLayers = {};
+		this.okBtn.setAttribute('disabled', 'disabled');
+		
+		var graphModel = graph.model;
+		var layers = graphModel.getChildCells(graphModel.getRoot());
+		
+		for (var i = 0; i < layers.length; i++) 
+		{
+			this.createLayerItem(layers[i], pageId, graph, pageNode);
+		}
+	});
+	
+	mxEvent.addListener($listItem, 'click', onClick);
+	
+	if(this.aspect.pageId == pageId) 
+	{
+		onClick();
+	}
+};
+
+AspectDialog.prototype.createLayerItem = function(layer, pageId, graph, pageNode)
+{
+	var graphModel = graph.model;
+	var layerName = graph.convertValueToString(layer) || (mxResources.get('background') || 'Background');
+	var $listItem = document.createElement('div');
+	$listItem.setAttribute('data-layer-id', layer.id);
+	$listItem.className = 'geAspectDlgListItem';
+	$listItem.innerHTML = '<div style="max-width: 100%; max-height: 100%;"></div><div class="geAspectDlgListItemText">' + layerName + '</div>';
+	this.layersContainer.appendChild($listItem);
+	
+	this.createViewer($listItem.childNodes[0], pageNode, layer.id);
+
+	var onClick = mxUtils.bind(this, function()
+	{
+		if ($listItem.className.indexOf('geAspectDlgListItemSelected') >= 0) //Selected
+		{
+			$listItem.className = 'geAspectDlgListItem';
+			delete this.selectedLayers[layer.id];
+			
+			if (Object.keys(this.selectedLayers).length == 0)
+			{
+				this.okBtn.setAttribute('disabled', 'disabled');
+			}
+		}
+		else
+		{
+			$listItem.className += ' geAspectDlgListItemSelected';
+			this.selectedLayers[layer.id] = true;
+			this.okBtn.removeAttribute('disabled');
+		}
+	});
+	
+	mxEvent.addListener($listItem, 'click', onClick);
+	
+	if(this.aspect.layerIds.indexOf(layer.id) != -1) 
+	{
+		onClick();
+	}
 };
