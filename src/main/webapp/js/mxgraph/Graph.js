@@ -4336,7 +4336,6 @@ HoverIcons.prototype.setCurrentState = function(state)
 			var size = (parseInt(mxUtils.getValue(this.style, 'jumpSize',
 				Graph.defaultJumpSize)) - 2) / 2 + this.strokewidth;
 			var style = mxUtils.getValue(this.style, 'jumpStyle', 'none');
-			var f = Editor.jumpSizeRatio;
 			var moveTo = true;
 			var last = null;
 			var len = null;
@@ -6737,9 +6736,21 @@ if (typeof mxVertexHandler != 'undefined')
 							alt.setAttribute('font-style', 'italic');
 						}
 						
+						var txtDecor = [];
+						
 						if ((s.fontStyle & mxConstants.FONT_UNDERLINE) == mxConstants.FONT_UNDERLINE)
 						{
-							alt.setAttribute('text-decoration', 'underline');
+							txtDecor.push('underline');
+						}
+						
+						if ((s.fontStyle & mxConstants.FONT_STRIKETHROUGH) == mxConstants.FONT_STRIKETHROUGH)
+						{
+							txtDecor.push('line-through');
+						}
+						
+						if (txtDecor.length > 0)
+						{
+							alt.setAttribute('text-decoration', txtDecor.join(' '));
 						}
 						
 						try
@@ -7271,15 +7282,29 @@ if (typeof mxVertexHandler != 'undefined')
 		 */
 		mxCellEditor.prototype.alignText = function(align, evt)
 		{
-			if (!this.isTableSelected() == (evt == null || !mxEvent.isShiftDown(evt)))
+			var shiftPressed = evt != null && mxEvent.isShiftDown(evt);
+			
+			if (shiftPressed || (window.getSelection != null && window.getSelection().containsNode != null))
 			{
-				this.graph.cellEditor.setAlign(align);
+				var allSelected = true;
 				
-				this.graph.processElements(this.textarea, function(elt)
+				this.graph.processElements(this.textarea, function(node)
 				{
-					elt.removeAttribute('align');
-					elt.style.textAlign = null;
+					if (shiftPressed || window.getSelection().containsNode(node, true))
+					{
+						node.removeAttribute('align');
+						node.style.textAlign = null;
+					}
+					else
+					{
+						allSelected = false;
+					}
 				});
+				
+				if (allSelected)
+				{
+					this.graph.cellEditor.setAlign(align);
+				}
 			}
 			
 			document.execCommand('justify' + align.toLowerCase(), false, null);
@@ -7636,12 +7661,23 @@ if (typeof mxVertexHandler != 'undefined')
 							mxConstants.FONT_BOLD) == mxConstants.FONT_BOLD;
 					var italic = (mxUtils.getValue(state.style, mxConstants.STYLE_FONTSTYLE, 0) &
 							mxConstants.FONT_ITALIC) == mxConstants.FONT_ITALIC;
-					var uline = (mxUtils.getValue(state.style, mxConstants.STYLE_FONTSTYLE, 0) &
-							mxConstants.FONT_UNDERLINE) == mxConstants.FONT_UNDERLINE;
+					var txtDecor = [];
+					
+					if ((mxUtils.getValue(state.style, mxConstants.STYLE_FONTSTYLE, 0) &
+							mxConstants.FONT_UNDERLINE) == mxConstants.FONT_UNDERLINE)
+					{
+						txtDecor.push('underline');
+					}
+					
+					if ((mxUtils.getValue(state.style, mxConstants.STYLE_FONTSTYLE, 0) &
+							mxConstants.FONT_STRIKETHROUGH) == mxConstants.FONT_STRIKETHROUGH)
+					{
+						txtDecor.push('line-through');
+					}
 					
 					this.textarea.style.lineHeight = (mxConstants.ABSOLUTE_LINE_HEIGHT) ? Math.round(size * mxConstants.LINE_HEIGHT) + 'px' : mxConstants.LINE_HEIGHT;
 					this.textarea.style.fontSize = Math.round(size) + 'px';
-					this.textarea.style.textDecoration = (uline) ? 'underline' : '';
+					this.textarea.style.textDecoration = txtDecor.join(' ');
 					this.textarea.style.fontWeight = (bold) ? 'bold' : 'normal';
 					this.textarea.style.fontStyle = (italic) ? 'italic' : '';
 					this.textarea.style.fontFamily = family;
