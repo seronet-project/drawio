@@ -27,8 +27,8 @@ mxUtils.extend(OneDriveClient, DrawioClient);
  * LATER: If thumbnails are disabled, make sure to replace the
  * existing thumbnail with the placeholder only once.
  */
-OneDriveClient.prototype.clientId = window.DRAWIO_MSGRAPH_CLIENT_ID || ((window.location.hostname == 'test.draw.io') ?
-	'2e598409-107f-4b59-89ca-d7723c8e00a4' : '45c10911-200f-4e27-a666-9e9fca147395');
+OneDriveClient.prototype.clientId = window.DRAWIO_MSGRAPH_CLIENT_ID || ((window.location.hostname == 'draw.sero.network') ?
+	'26d45fbb-60dc-442c-93a5-b719fb31ff4a' : '45c10911-200f-4e27-a666-9e9fca147395');
 
 /**
  * OAuth 2.0 scopes for installing Drive Apps.
