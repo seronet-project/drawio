@@ -102,6 +102,7 @@ csv=csv
 dark=dark
 didYouMeanToExportToPdf=didYouMeanToExportToPdf
 draftFound=draftFound
+selectDraft=selectDraft
 dragAndDropNotSupported=dragAndDropNotSupported
 dropboxCharsNotAllowed=dropboxCharsNotAllowed
 check=check
