@@ -4158,7 +4158,7 @@ var ImageDialog = function(editorUi, title, initialValue, fn, ignoreExisting, co
 	linkInput.setAttribute('autocomplete', 'off');
 	linkInput.setAttribute('autocapitalize', 'off');
 	linkInput.style.marginTop = '6px';
-	var realWidth = (Graph.fileSupport) ? 420 : 340;
+	var realWidth = (Graph.fileSupport) ? 460 : 340;
 	linkInput.style.width = realWidth + ((mxClient.IS_QUIRKS) ? 20 : -20) + 'px';
 	linkInput.style.backgroundImage = 'url(\'' + Dialog.prototype.clearImage + '\')';
 	linkInput.style.backgroundRepeat = 'no-repeat';
@@ -4887,13 +4887,13 @@ var LinkDialog = function(editorUi, initialValue, btnLabel, fn, showPages)
 				            .setSelectFolderEnabled(true);
 						var view21 = new google.picker.DocsView()
 							.setIncludeFolders(true)
-							.setEnableTeamDrives(true)
+							.setEnableDrives(true)
 				            .setSelectFolderEnabled(true);
 						var picker = new google.picker.PickerBuilder()
 							.setAppId(editorUi.drive.appId)	
 							.setLocale(mxLanguage)
 							.setOAuthToken(editorUi.drive.token)
-							.enableFeature(google.picker.Feature.SUPPORT_TEAM_DRIVES)
+							.enableFeature(google.picker.Feature.SUPPORT_DRIVES)
 						    .addView(view)
 							.addView(view2)
 							.addView(view21)
