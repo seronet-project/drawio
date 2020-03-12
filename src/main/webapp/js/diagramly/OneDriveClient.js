@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2006-2017, JGraph Ltd
- * Copyright (c) 2006-2017, Gaudenz Alder
+ * Copyright (c) 2006-2020, JGraph Ltd
+ * Copyright (c) 2006-2020, draw.io AG
  */
 OneDriveClient = function(editorUi)
 {
@@ -30,6 +30,8 @@ mxUtils.extend(OneDriveClient, DrawioClient);
 OneDriveClient.prototype.clientId = window.DRAWIO_MSGRAPH_CLIENT_ID || ((window.location.hostname == 'draw.sero.network') ?
 	'26d45fbb-60dc-442c-93a5-b719fb31ff4a' : '45c10911-200f-4e27-a666-9e9fca147395');
 
+OneDriveClient.prototype.clientId = window.location.hostname == 'app.diagrams.net' ?
+		'b5ff67d6-3155-4fca-965a-59a3655c4476' : OneDriveClient.prototype.clientId;
 /**
  * OAuth 2.0 scopes for installing Drive Apps.
  */
