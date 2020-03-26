@@ -367,7 +367,8 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 				}
 				
 				this.tooltip.style.height = height + 'px';
-				var x0 = -Math.round(bounds.x - this.tooltipBorder) + (w2 - width) / 2;
+				var x0 = -Math.round(bounds.x - this.tooltipBorder) +
+					((w2 > width) ? (w2 - width) / 2 : 0);
 				var y0 = -Math.round(bounds.y - this.tooltipBorder);
 				
 				var b = document.body;
@@ -3262,11 +3263,6 @@ Sidebar.prototype.itemClicked = function(cells, ds, evt, elt)
 		var pt = (mxEvent.isAltDown(evt)) ? graph.getFreeInsertPoint() :
 			graph.getCenterInsertPoint(graph.getBoundingBoxFromGeometry(cells, true));
 		ds.drop(graph, evt, null, pt.x, pt.y, true);
-		
-		if (this.editorUi.hoverIcons != null && (mxEvent.isTouchEvent(evt) || mxEvent.isPenEvent(evt)))
-		{
-			this.editorUi.hoverIcons.update(graph.view.getState(graph.getSelectionCell()));
-		}
 	}
 };
 

@@ -3280,6 +3280,24 @@ LucidImporter = {};
 		
 		return '';
 	}
+		
+	function getLink(m)
+	{
+		if (m != null)
+		{
+			for (var i = 0; i < m.length; i++)
+			{
+				if (m[i].n = 'lk' && m[i].v != null &&
+					m[i].v.length > 0 &&
+					m[i].v[0].tp == 'ext')
+				{
+					return m[i].v[0].url;
+				}
+			}
+		}
+		
+		return null;
+	}
 
 	function getFontColor(properties)
 	{
@@ -3323,8 +3341,11 @@ LucidImporter = {};
 	
 	function getFontStyle(properties)
 	{
-		var m = getTextM(properties);
+		return getFontStyleString(getTextM(properties));
+	}
 		
+	function getFontStyleString(m)
+	{
 		if (m != null)
 		{
 			var fontStyle = 0;
@@ -3346,6 +3367,11 @@ LucidImporter = {};
 							isBT = true;
 							fontStyle += 1;
 						}
+					}
+					else if (currM.n == 'fc' && currM.v == 'Bold')
+					{
+						isBT = true;
+						fontStyle += 1;
 					}
 					
 					i++;
@@ -3571,7 +3597,7 @@ LucidImporter = {};
 		//adds global spacing
 		if (typeof properties.InsetMargin === 'number')
 		{
-				return 'spacing=' + parseInt(properties.InsetMargin) + ';';
+				return 'spacing=' + Math.max(0, Math.round(parseInt(properties.InsetMargin) * scale)) + ';';
 		}
 	
 		return '';
@@ -3605,6 +3631,16 @@ LucidImporter = {};
 		return '';
 	}
 
+	function getHeaderColor(color)
+	{
+		if (color != null)
+		{
+			return mxConstants.STYLE_FILLCOLOR + '=' + color.substring(0, 7) + ';';
+		}
+		
+		return '';
+	}
+	
 	function getOpacity(properties, action, cell)
 	{
 		var style = '';
@@ -3657,41 +3693,45 @@ LucidImporter = {};
 
 	function getRotation(properties, action, cell)
 	{
+		var s = '';
+	
 		// Converts rotation
 		if (properties.Rotation != null)
 		{
 			// KNOWN: TextRotation currently ignored
 			var deg = mxUtils.toDegree(parseFloat(properties.Rotation));
+			var h = true;
 			
 			// Fixes the case for horizontal swimlanes where we use horizontal=0
 			// and Lucid uses rotation
-			
 			if (action.Class == 'AdvancedSwimLaneBlockRotated')
 			{
 				deg += 90;
 				cell.geometry.rotate90();
+				h = false;
 			}
 			else if (mxUtils.indexOf(rccw, action.Class) >= 0)
 			{
 				deg -= 90;
 				cell.geometry.rotate90();
-				cell.geometry.rotate90();
-				cell.geometry.rotate90();
 			}
 			else if (mxUtils.indexOf(rcw2, action.Class) >= 0)
 			{
 				deg += 180;
-				cell.geometry.rotate90();
-				cell.geometry.rotate90();
 			}
 			
 			if (deg != 0)
 			{
-				return 'rotation=' + deg + ';';
+				s += 'rotation=' + deg + ';'
+			}
+			
+			if (!h)
+			{
+				s +=  'horizontal=0;';
 			}
 		}
 		
-		return '';
+		return s;
 	}
 	
 	function getFlipH(properties)
@@ -3753,11 +3793,7 @@ LucidImporter = {};
 	function getStrokeStyle(properties)
 	{
 		// Stroke style
-		if (properties.StrokeStyle == 'dashed')
-		{
-			return 'dashed=1;';
-		}
-		else if (properties.StrokeStyle == 'dotted')
+		if (properties.StrokeStyle == 'dotted')
 		{
 			return 'dashed=1;dashPattern=1 4;';
 		}
@@ -3769,13 +3805,18 @@ LucidImporter = {};
 		{
 			return 'dashed=1;dashPattern=1 1;';
 		}
+		else if (properties.StrokeStyle != null && properties.
+			StrokeStyle.substring(0, 6) == 'dashed')
+		{
+			return 'dashed=1;';
+		} 
 		
 		return '';
 	}
 	
 	function getStrokeWidth(properties)
 	{
-		return createStyle(mxConstants.STYLE_STROKEWIDTH, parseFloat(properties.LineWidth) * scale, '1');
+		return createStyle(mxConstants.STYLE_STROKEWIDTH, Math.round(parseFloat(properties.LineWidth) * scale), '1');
 	}
 	
 	function getImage(properties, action)
@@ -3794,9 +3835,25 @@ LucidImporter = {};
 		return '';
 	}
 
-	// Adds metadata
+	// Adds metadata, link, converts placeholders
 	function addCustomData(cell, p, graph)
 	{
+		if (p.Link != null && p.Link.length > 0 && p.Link[0].tp == 'ext')
+		{
+			graph.setAttributeForCell(cell, 'link', p.Link[0].url);
+		}
+		else if (p.Text != null)
+		{
+			var link = getLink(getTextM(p.Text));
+			
+			if (link != null)
+			{
+				graph.setAttributeForCell(cell, 'link', link);
+			}
+		}
+		
+		replacePlaceholders(cell, graph);
+		
 		for (var property in p)
 		{
 			if (p.hasOwnProperty(property) && 
@@ -3807,17 +3864,7 @@ LucidImporter = {};
 					var data = p[property];
 					var key = mxUtils.trim(data.Label).replace(/[^a-z0-9]+/ig, '_').
 						replace(/^\d+/, '').replace(/_+$/, '');
-					var currentKey = key;
-					var counter = 0;
-					
-					// Resolves conflicts by adding counter postfix
-					while (graph.getAttributeForCell(cell, currentKey) != null)
-					{
-						counter++;
-						currentKey = key + '_' + counter;
-					}
-					
-					graph.setAttributeForCell(cell, currentKey, (data.Value != null) ? data.Value : '');
+					setAttributeForCell(cell, key, data.Value, graph);
 				}
 				catch (e)
 				{
@@ -3830,7 +3877,74 @@ LucidImporter = {};
 		}
 	};
 	
-	function updateCell(cell, obj, graph)
+	var placeholderPattern = new RegExp('{{(date\{.*\}|[^%^\{^\}]+)}}', 'g');
+	
+	function replacePlaceholders(cell, graph)
+	{
+		var result = [];
+		var str = graph.convertValueToString(cell);
+		var doReplace = false;
+		
+		if (str != null)
+		{
+			var last = 0;
+			
+			while (match = placeholderPattern.exec(str))
+			{
+				var val = match[0];
+				doReplace = true;
+				
+				if (val.length > 2)
+				{
+					var tmp = val.substring(2, val.length - 2);
+					
+					if (tmp == 'documentName')
+					{
+						tmp = 'filename';
+					}
+					else if (tmp.substring(0, 5) == 'date:')
+					{
+						// LATER: Convert more date masks
+						tmp = 'date{' + tmp.substring(5).replace(/MMMM/g, 'mmmm') + '}';
+					}
+					else if (tmp.substring(0, 9) == 'i18nDate:')
+					{
+						// LATER: Convert more named date masks
+						tmp = 'date{' + tmp.substring(9).replace(/i18nShort/g, 'shortDate')
+							.replace(/i18nMediumWithTime/g, 'mmm d, yyyy hh:MM TT') + '}';
+					}
+					
+					tmp = '%' + tmp + '%';
+					result.push(str.substring(last, match.index) + ((tmp != null) ? tmp : val));
+					last = match.index + val.length;
+				}
+			}
+			
+			if (doReplace)
+			{
+				result.push(str.substring(last));
+				graph.setAttributeForCell(cell, 'label', result.join(''));
+				graph.setAttributeForCell(cell, 'placeholders', '1');
+			}
+		}
+	};
+	
+	function setAttributeForCell(cell, key, value, graph)
+	{
+		var currentKey = key;
+		var counter = 0;
+		
+		// Resolves conflicts by adding counter postfix
+		while (graph.getAttributeForCell(cell, currentKey) != null)
+		{
+			counter++;
+			currentKey = key + '_' + counter;
+		}
+		
+		graph.setAttributeForCell(cell, currentKey, (value != null) ? value : '');
+	};
+	
+	function updateCell(cell, obj, graph, source, target, ignoreLabel)
 	{
 		var a = getAction(obj);
 		
@@ -3848,7 +3962,7 @@ LucidImporter = {};
 			if (p != null)
 			{
 				// Adds label
-				cell.value = convertText(p);
+				cell.value = (!ignoreLabel) ? convertText(p) : '';
 				cell.style += addAllStyles(cell.style, p, a, cell);
 				
 				if (!cell.style.includes('strokeColor'))
@@ -3878,13 +3992,14 @@ LucidImporter = {};
 							
 							for (var i = 0; i < p.ElbowPoints.length; i++)
 							{
-								cell.geometry.points.push(new mxPoint(Math.round(p.ElbowPoints[i].x * scale + dx),
-										Math.round(p.ElbowPoints[i].y * scale + dy)));
+								cell.geometry.points.push(new mxPoint(
+									Math.round(p.ElbowPoints[i].x * scale + dx),
+									Math.round(p.ElbowPoints[i].y * scale + dy)));
 							}
 						}
 						else if (p.Shape == 'elbow')
 						{
-							if (p.Endpoint1.Block != null && p.Endpoint1.Block != null)
+							if (p.Endpoint1.Block != null && p.Endpoint2.Block != null)
 							{
 								cell.style += 'edgeStyle=orthogonalEdgeStyle;';
 							}
@@ -3893,7 +4008,7 @@ LucidImporter = {};
 								cell.style += 'edgeStyle=elbowEdgeStyle;';
 							}
 						}
-						else if (p.Endpoint1.Block != null && p.Endpoint1.Block != null)
+						else if (p.Endpoint1.Block != null && p.Endpoint2.Block != null)
 						{
 							cell.style += 'edgeStyle=orthogonalEdgeStyle;';
 	
@@ -3934,12 +4049,50 @@ LucidImporter = {};
 						}
 					}
 
+					// Inserts implicit or explicit control points for loops
+					var implicitY = false;
+					
+					if (p.ElbowPoints == null && p.Endpoint1.Block != null &&
+						p.Endpoint1.Block == p.Endpoint2.Block)
+					{
+						if (p.ElbowControlPoints != null)
+						{
+							cell.geometry.points = [];
+							
+							for (var i = 0; i < p.ElbowControlPoints.length; i++)
+							{
+								var pt = p.ElbowControlPoints[i];
+								
+								cell.geometry.points.push(new mxPoint(
+									Math.round(pt.x * scale + dx),
+									Math.round(pt.y * scale + dx)));
+							}
+						}
+						else if (source != null && target != null)
+						{
+							var exit = new mxPoint(Math.round(source.geometry.x + source.geometry.width * p.Endpoint1.LinkX),
+								Math.round(source.geometry.y + source.geometry.height * p.Endpoint1.LinkY));
+							var entry = new mxPoint(Math.round(target.geometry.x + target.geometry.width * p.Endpoint2.LinkX),
+								Math.round(target.geometry.y + target.geometry.height * p.Endpoint2.LinkY));
+							var dx = (exit.x == entry.x) ? 20 : 0;
+							var dy = (exit.y == entry.y) ? 0 : 0;
+							
+							cell.geometry.points = [new mxPoint(exit.x + dx, exit.y + dy), new mxPoint(entry.x + dx, entry.y + dy)];
+							implicitX = (exit.y == entry.y);
+							implicitY = (exit.x == entry.x);
+						}
+					}
+					
 					// Anchor points and arrows
-					// TODO: Convert waypoints, elbowPoints
-					updateEndpoint(cell, p.Endpoint1, true);
-					updateEndpoint(cell, p.Endpoint2, false);
+					updateEndpoint(cell, p.Endpoint1, true, implicitY);
+					updateEndpoint(cell, p.Endpoint2, false, implicitY);
 				}
 			}
+		}
+		
+		if (obj.id != null)
+		{
+			setAttributeForCell(cell, 'lucidchartObjectId', obj.id, graph);
 		}
 	};
 	
@@ -3957,16 +4110,16 @@ LucidImporter = {};
 				Math.round(b.w * scale), Math.round(b.h * scale)), vertexStyle);
 	    v.vertex = true;
 	    updateCell(v, obj, graph);
-
+	    
 	    return v;
 	};
 	
-	function createEdge(obj, graph)
+	function createEdge(obj, graph, source, target)
 	{
 		var e = new mxCell('', new mxGeometry(0, 0, 100, 100), edgeStyle);
 		e.geometry.relative = true;
 		e.edge = true;
-		updateCell(e, obj, graph);
+		updateCell(e, obj, graph, source, target, true);
 		
 		// Adds text labels
 		var a = getAction(obj);
@@ -3984,12 +4137,17 @@ LucidImporter = {};
 				count++;
 			}
 			
-			var count = 1;
+			count = 0;
 			
-			while (ta['m' + count] != null)
+			while (ta['m' + count] != null || count < 1)
 			{
 				var tmp = ta['m' + count];
-				e = insertLabel(tmp, e, obj);
+				
+				if (tmp != null)
+				{
+					e = insertLabel(tmp, e, obj);
+				}
+				
 				count++;
 			}
 
@@ -4012,12 +4170,44 @@ LucidImporter = {};
 	function insertLabel(textArea, e, obj)
 	{
 		var x = (parseFloat(textArea.Location) - 0.5) * 2;
-		var lab = new mxCell(convertText(textArea), new mxGeometry(x, 0, 0, 0), labelStyle);
-		lab.geometry.relative = true
+		
+		if (isNaN(x) && textArea.Text != null && textArea.Text.Location != null)
+		{
+			x = (parseFloat(textArea.Text.Location) - 0.5) * 2;
+		}
+		
+		var lab = new mxCell(convertText(textArea), new mxGeometry((!isNaN(x)) ? x : 0, 0, 0, 0),
+			labelStyle + getEdgeLabelStyle(textArea));
+		lab.geometry.relative = true;
 		lab.vertex = true;
 		e.insert(lab);
 		
 		return e;
+	};
+	
+	function getEdgeLabelStyle(obj)
+	{
+		var size = defaultFontSize;
+		var style = '';
+		
+		if (obj != null && obj.Value != null && obj.Value.m != null)
+		{
+			style = getFontStyleString(obj.Value.m);
+			
+			for (var i = 0; i < obj.Value.m.length; i++)
+			{
+				if (obj.Value.m[i].n == 's')
+				{
+					size = scale * parseFloat(obj.Value.m[i].v);
+				}
+				else if (obj.Value.m[i].n == 'c')
+				{
+					style += 'fontColor=' + obj.Value.m[i].v + ';'
+				}
+			}
+		}
+		
+		return style + ';fontSize=' + size + ';';
 	};
 	
 	function createStyle(key, prop, defaultValue, fn)
@@ -4035,14 +4225,14 @@ LucidImporter = {};
 		return '';
 	};
 
-	function updateEndpoint(cell, endpoint, source)
+	function updateEndpoint(cell, endpoint, source, ignoreX, ignoreY)
 	{
 		if (endpoint != null)
 		{
 			if (endpoint.LinkX != null && endpoint.LinkY != null)
 			{
-				cell.style += ((source) ? 'exitX' : 'entryX') + '=' + endpoint.LinkX + ';' +
-					((source) ? 'exitY' : 'entryY') + '=' + endpoint.LinkY + ';' +
+				cell.style += ((!ignoreX) ? ((source) ? 'exitX' : 'entryX') + '=' + endpoint.LinkX + ';' : '') +
+					((!ignoreY) ? (((source) ? 'exitY' : 'entryY') + '=' + endpoint.LinkY + ';') : '') +
 					((source) ? 'exitPerimeter' : 'entryPerimeter') + '=1;';
 			}
 		}
@@ -4156,29 +4346,38 @@ LucidImporter = {};
 					queue.push(obj);
 				}
 			}
-				
+
+			if (g.Lines != null)
+			{
+				for (var key in g.Lines)
+				{
+					if (mxUtils.indexOf(hidden, key) < 0)
+					{
+						var obj = g.Lines[key];
+						obj.id = key;
+						
+						queue.push(obj);
+					}
+				}
+			}
+			
 			// Sorts all cells by ZOrder
 			queue.sort(function(a, b)
 			{
 				a = getAction(a);
 				b = getAction(b);
 				
-				if (a.Properties != null)
-				{
-					if (b.Properties != null)
-					{
-						return a.Properties.ZOrder - b.Properties.ZOrder;
-					}
-				}
+				var ai = (a.Properties != null) ? a.Properties.ZOrder : a.ZOrder;
+				var bi = (b.Properties != null) ? b.Properties.ZOrder : b.ZOrder;
 				
-				return 0;
+				return (ai != null && bi != null) ? ai - bi : 0;
 			});
 			
 			function addLine(obj, p)
 			{
 				var src = (p.Endpoint1.Block != null) ? lookup[p.Endpoint1.Block] : null;
 				var trg = (p.Endpoint2.Block != null) ? lookup[p.Endpoint2.Block] : null;
-				var e = createEdge(obj, graph);
+				var e = createEdge(obj, graph, src, trg);
 				
 				if (src == null && p.Endpoint1 != null)
 				{
@@ -4210,20 +4409,12 @@ LucidImporter = {};
 					var p = obj.Action.Properties;
 					addLine(obj, p);
 				}
-			}
-			
-			if (g.Lines != null)
-			{
-				for (var key in g.Lines)
+				else if (obj.StrokeStyle != null)
 				{
-					if (mxUtils.indexOf(hidden, key) < 0)
-					{
-						var obj = g.Lines[key];
-					    addLine(obj, obj);
-					}
+					addLine(obj, obj);
 				}
 			}
-			
+
 			if (crop && dx != null && dy != null)
 			{
 				if (graph.isGridEnabled())
@@ -4292,6 +4483,11 @@ LucidImporter = {};
 			    }
 			});
 		};
+		
+		if (state.state != null && urlParams['dev'] == '1' && window.console != null)
+		{
+			console.log(JSON.stringify(JSON.parse(state.state), null, 2));
+		}
 		
 		if (state.state != null)
 		{
@@ -4470,7 +4666,7 @@ LucidImporter = {};
 	    v.vertex = true;
 
 	    var cls = (obj.Class != null) ? obj.Class : (a != null) ? a.Class : null;
-	    
+	    var rotatedSL = false;
 	    
 	    //composite shapes
 		switch (cls)
@@ -4520,6 +4716,7 @@ LucidImporter = {};
 				break;
 				
 			case 'AdvancedSwimLaneBlockRotated' :
+				rotatedSL = true;
 			case 'AdvancedSwimLaneBlock' :
 				var lanesNum = 0;
 				
@@ -4528,33 +4725,50 @@ LucidImporter = {};
 					lanesNum = p.Lanes.length;
 				}
 
-				v.style = "strokeColor=none;fillColor=none;"
+				v.style = 'html=1;whiteSpace=wrap;container=1;collapsible=0;childLayout=stackLayout;' +
+					'horizontalStack=0;resizeParent=1;strokeColor=none;fillColor=none;dropTarget=0;';
 				v.style += addAllStyles(v.style, p, a, v);
 				
 				var totalOffset = 0; //relative
 				var lane = new Array();
+
+				var laneStyle = 'swimlane;html=1;whiteSpace=wrap;container=1;connectable=0;collapsible=0;startSize=25;dropTarget=0;';
 				
-				for (var i = 0; i < lanesNum; i++)
+				if (!rotatedSL)
 				{
-					var currOffset = parseFloat(p.Lanes[i].p);
+					var tbl = v;
+					v = new mxCell('', new mxGeometry(x, y, w, h), 'html=1;whiteSpace=wrap;container=1;collapsible=0;strokeColor=none;fillColor=none;dropTarget=0;');
+				    v.vertex = true;
+				    tbl.insert(v);
+				}
+				else
+				{
+					laneStyle += 'horizontal=0;'
+				}
+				
+				for (var j = 0; j < lanesNum; j++)
+				{
+					var currOffset = parseFloat(p.Lanes[j].p);
+					var i = parseInt(p.Lanes[j].tid) || j;
 					
-					lane.push(new mxCell('', new mxGeometry(w * totalOffset, 0,	w * currOffset, h), 'shape=swimlane;startSize=25;'));
+					lane.push(new mxCell('', new mxGeometry(w * totalOffset, 0,	w * currOffset, h), laneStyle));
 					
-					lane[i].vertex = true;
-					v.insert(lane[i]);
-					lane[i].value = convertText(p["Lane_" + i]);
-					lane[i].style += 	
+					lane[j].vertex = true;
+					v.insert(lane[j]);
+					lane[j].value = convertText(p["Lane_" + i]);
+					lane[j].style +=
+									addAllStyles(lane[j].style, p, a, lane[j]) +
 									getFontSize(p["Lane_" + i]) +
 									getFontColor(p["Lane_" + i]) + 
 									getFontStyle(p["Lane_" + i]) +
-									getTextAlignment(p["Lane_" + i], lane[i]) + 
+									getTextAlignment(p["Lane_" + i], lane[j]) + 
 									getTextLeftSpacing(p["Lane_" + i]) +
 									getTextRightSpacing(p["Lane_" + i]) + 
 									getTextTopSpacing(p["Lane_" + i]) +
 									getTextBottomSpacing(p["Lane_" + i]) + 
 									getTextGlobalSpacing(p["Lane_" + i]) +
-									getTextVerticalAlignment(p["Lane_" + i]); 
-					addAllStyles(lane[i].style, p, a, lane[i]);
+									getTextVerticalAlignment(p["Lane_" + i]) +
+									getHeaderColor(p["HeaderFill_" + i]);
 
 					totalOffset += currOffset;
 				}
@@ -5128,14 +5342,14 @@ LucidImporter = {};
 				
 				if (p.Checked)
 				{
-					dot = new mxCell('', new mxGeometry(w * 0.15, h * 0.15, w * 0.7, h * 0.7), 'shape=ellipse;fillColor=#33B5E5;strokeWidth=0.6;');
+					dot = new mxCell('', new mxGeometry(w * 0.15, h * 0.15, w * 0.7, h * 0.7), 'shape=ellipse;fillColor=#33B5E5;strokeWidth=1;');
 					dot.vertex = true;
 					v.insert(dot);
 				}
 
 				if (p.Scheme == 'Dark')
 				{
-					v.style += 'shape=ellipse;strokeWidth=0.6;strokeColor=#272727;';
+					v.style += 'shape=ellipse;strokeWidth=1;strokeColor=#272727;';
 					
 					if (p.Checked)
 					{
@@ -5149,7 +5363,7 @@ LucidImporter = {};
 				}
 				else
 				{
-					v.style += 'shape=ellipse;strokeWidth=0.6;fillColor=#ffffff;strokeColor=#5C5C5C;';
+					v.style += 'shape=ellipse;strokeWidth=1;fillColor=#ffffff;strokeColor=#5C5C5C;';
 					
 					if (p.Checked)
 					{
@@ -5171,11 +5385,11 @@ LucidImporter = {};
 
 				if (p.Scheme == 'Dark')
 				{
-					v.style += 'strokeWidth=0.6;strokeColor=#272727;fillColor=#111111;';
+					v.style += 'strokeWidth=1;strokeColor=#272727;fillColor=#111111;';
 				}
 				else
 				{
-					v.style += 'strokeWidth=0.6;strokeColor=#5C5C5C;fillColor=#ffffff;';
+					v.style += 'strokeWidth=1;strokeColor=#5C5C5C;fillColor=#ffffff;';
 				}
 
 				v.style += addAllStyles(v.style, p, a, v);
@@ -9179,7 +9393,7 @@ LucidImporter = {};
 					//add line
 					if (p.Dividers[(i + 1)] != null)
 					{
-						item[i] = new mxCell('', new mxGeometry(w * 0.05, i * h / p.Lines, w * 0.9, itemH), 'shape=line;strokeWidth=0.25;');
+						item[i] = new mxCell('', new mxGeometry(w * 0.05, i * h / p.Lines, w * 0.9, itemH), 'shape=line;strokeWidth=1;');
 						item[i].vertex = true;
 						v.insert(item[i]);
 						item[i].style += getStrokeColor(p, a); 

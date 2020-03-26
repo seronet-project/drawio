@@ -16,7 +16,8 @@ window.mxLoadSettings = window.mxLoadSettings || urlParams['configure'] != '1';
 window.isSvgBrowser = window.isSvgBrowser || (navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 9);
 
 // CUSTOM_PARAMETERS - URLs for save and export
-window.DRAWIO_BASE_URL = window.DRAWIO_BASE_URL || 'https://app.diagrams.net';
+window.DRAWIO_BASE_URL = window.DRAWIO_BASE_URL || ((/.*\.draw\.io$/.test(window.location.hostname)) ?
+	window.location.protocol + '//' + window.location.hostname : 'https://app.diagrams.net');
 window.EXPORT_URL = window.EXPORT_URL || 'https://exp.draw.io/ImageExport4/export';
 window.PLANT_URL = window.PLANT_URL || 'https://exp-plant.draw.io/plantuml-1-2020-2';
 window.DRAW_MATH_URL = window.DRAW_MATH_URL || window.DRAWIO_BASE_URL + '/math';
@@ -26,7 +27,7 @@ window.REALTIME_URL = window.REALTIME_URL || 'cache';
 window.DRAWIO_GITLAB_URL = window.DRAWIO_GITLAB_URL || 'https://gitlab.com';
 window.DRAWIO_GITLAB_ID = window.DRAWIO_GITLAB_ID || '5cdc018a32acddf6eba37592d9374945241e644b8368af847422d74c8709bc44';
 window.SAVE_URL = window.SAVE_URL || 'save';
-window.OPEN_URL = window.OPEN_URL || 'open';
+window.OPEN_URL = window.OPEN_URL || 'import';
 window.PROXY_URL = window.PROXY_URL || 'proxy';
 window.DRAWIO_VIEWER_URL = window.DRAWIO_VIEWER_URL || null;
 
