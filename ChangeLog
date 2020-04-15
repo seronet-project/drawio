@@ -1,3 +1,17 @@
+15-APR-2020: 12.9.13
+
+- Adds file properties dialog
+
+14-APR-2020: 12.9.12
+
+- Adds edit style to context menu
+- Fixes moving cells in stacks
+
+11-APR-2020: 12.9.11
+
+- Fixes edge label default style
+- Improves Lucidchart import
+
 08-APR-2020: 12.9.10
 
 - Fixes toggle selection for cells in containers

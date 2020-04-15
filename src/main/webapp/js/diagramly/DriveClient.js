@@ -775,7 +775,7 @@ DriveClient.prototype.updateUser = function(success, error)
 		var url = 'https://www.googleapis.com/oauth2/v2/userinfo?alt=json';
 		var headers = {'Authorization': 'Bearer ' + this.token};
 		
-		this.ui.loadUrl(url, mxUtils.bind(this, function(data)
+		this.ui.editor.loadUrl(url, mxUtils.bind(this, function(data)
 		{
 	    	var info = JSON.parse(data);
 	    	
@@ -827,7 +827,7 @@ DriveClient.prototype.copyFile = function(id, title, success, error)
 	if (id != null && title != null)
 	{
 		this.executeRequest({url: '/files/' + id + '/copy?fields=' + encodeURIComponent(this.allFields)
-				+ '&supportsAllDrives=true', //&alt=json
+				+ '&supportsAllDrives=true&enforceSingleParent=true', //&alt=json
 				method: 'POST',
 				params: {'title': title, 'properties':
 					[{'key': 'channel', 'value': Editor.guid()}]}
@@ -1026,7 +1026,7 @@ DriveClient.prototype.getXmlFile = function(resp, success, error, ignoreMime, re
 		var url = resp.downloadUrl;
 		
 		// Loads XML to initialize realtime document if realtime is empty
-		this.ui.loadUrl(url, mxUtils.bind(this, function(data)
+		this.ui.editor.loadUrl(url, mxUtils.bind(this, function(data)
 		{
 			try
 			{
@@ -1770,10 +1770,13 @@ DriveClient.prototype.saveFile = function(file, revision, success, errFn, noChec
 		
 					if (saveAsPng)
 					{
+						var p = this.ui.getPngFileProperties(this.ui.fileNode);
+						
 						this.ui.getEmbeddedPng(mxUtils.bind(this, function(data)
 						{
 							doExecuteRequest(data, true);
-						}), error, (this.ui.getCurrentFile() != file) ? savedData : null);
+						}), error, (this.ui.getCurrentFile() != file) ?
+							savedData : null, p.scale, p.border);
 					}
 					else
 					{
@@ -1924,7 +1927,7 @@ DriveClient.prototype.createUploadRequest = function(id, metadata, data, revisio
 	var reqObj = 
 	{
 		'fullUrl': 'https://content.googleapis.com/upload/drive/v2/files' + (id != null ? '/' + id : '') +
-			'?uploadType=multipart&supportsAllDrives=true&fields=' + this.allFields,
+			'?uploadType=multipart&supportsAllDrives=true&enforceSingleParent=true&fields=' + this.allFields,
 		'method': (id != null) ? 'PUT' : 'POST',
 		'headers': headers,
 		'params': delim + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(metadata) + delim +
