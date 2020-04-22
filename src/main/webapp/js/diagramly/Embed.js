@@ -51,11 +51,8 @@
 				AuthorInit: function ()
 				{
 					MathJax.Hub.Config({
-						jax: ['input/TeX', 'input/MathML', 'input/AsciiMath', 'output/HTML-CSS'],
+						jax: ['input/TeX', 'input/MathML', 'input/AsciiMath', 'output/SVG'],
 						extensions: ['tex2jax.js', 'mml2jax.js', 'asciimath2jax.js'],
-						'HTML-CSS': {
-							imageFont: null
-						},
 						TeX: {
 						  extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js', 'noUndefined.js']
 						}
@@ -73,7 +70,7 @@
 
 			var script = document.createElement('script');
 			script.type = 'text/javascript';
-			script.src = 'https://app.diagrams.net/math/MathJax.js?config=TeX-MML-AM_HTMLorMML';
+			script.src = 'https://app.diagrams.net/math/MathJax.js';
 			document.getElementsByTagName('head')[0].appendChild(script);
 		}
 	};
@@ -519,9 +516,9 @@
 						    	{
 									if (math == '1')
 									{
-										mxClient.NO_FO = true;
+										mxClient.NO_FO = mxClient.IS_SF;
 									}
-							    	
+						    		
 							    	var data = (xhr.getText != null) ? xhr.getText() : xhr.responseText;
 
 							    	if (data != null)
@@ -550,7 +547,7 @@
 							    				}
 							    			}
 							    		}
-
+							    		
 							    		if (newDocument != null && newDocument.documentElement.nodeName == 'svg')
 							    		{
 							    			var tmp = newDocument.documentElement.getAttribute('content');
@@ -577,8 +574,29 @@
 							    			
 							    			if (diagrams.length > 0)
 							    			{
-							    				data = Graph.decompress(mxUtils.getTextContent(diagrams[0]));
-							    				newDocument = mxUtils.parseXml(data);
+												var text = mxUtils.trim(mxUtils.getTextContent(diagrams[0]));
+												var node = null;
+												
+												if (text.length > 0)
+												{
+													var tmp = Graph.decompress(text);
+													
+													if (tmp != null && tmp.length > 0)
+													{
+														newDocument = mxUtils.parseXml(tmp);
+													}
+												}
+												else
+												{
+													var temp = mxUtils.getChildNodes(diagrams[0]);
+													
+													if (temp.length > 0)
+													{
+														// Creates new document for unique IDs within mxGraphModel
+														newDocument = mxUtils.createXmlDocument();
+														newDocument.appendChild(newDocument.importNode(temp[0], true));
+													}
+												}
 							    			}
 							    		}
 							    		

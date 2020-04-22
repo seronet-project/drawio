@@ -6,7 +6,7 @@ if (workbox)
 	workbox.precaching.precacheAndRoute([
   {
     "url": "js/app.min.js",
-    "revision": "e0b266cd50ca3075616e76f1fb68535d"
+    "revision": "0a8a721148ce3e53a4437cb149dbe8da"
   },
   {
     "url": "js/extensions.min.js",
@@ -22,7 +22,7 @@ if (workbox)
   },
   {
     "url": "index.html",
-    "revision": "ef6e260760a1fa3ca029dbbc0fb6231a"
+    "revision": "ecd9225c372feb9758d1f276ef6f0ab8"
   },
   {
     "url": "open.html",
@@ -238,7 +238,7 @@ if (workbox)
   },
   {
     "url": "resources/dia_tr.txt",
-    "revision": "a3f5fef73aab61db4f2a5cedcf5028db"
+    "revision": "0764d82abf5b90044c7df062d36b90ce"
   },
   {
     "url": "resources/dia_te.txt",
