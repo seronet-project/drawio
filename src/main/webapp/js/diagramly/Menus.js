@@ -2026,7 +2026,7 @@
 				//Add support to saving files if embedded mode is running with files
 				var file = editorUi.getCurrentFile();
 				
-				if (file != null)
+				if (file != null && (file.constructor != LocalFile || file.mode != null))
 				{
 					editorUi.saveFile();
 				}
@@ -3439,7 +3439,10 @@
 					this.addMenuItems(menu, ['saveAndExit'], parent);
 				}
 				
-				this.addMenuItems(menu, ['exit'], parent);
+				if (urlParams['noExitBtn'] != '1')
+				{
+					this.addMenuItems(menu, ['exit'], parent);
+				}
 			}
 			else
 			{
