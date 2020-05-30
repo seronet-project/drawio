@@ -729,11 +729,18 @@ EditorUi.initMinimalTheme = function()
         {
 	        ui.actions.put('plantUml', new Action(mxResources.get('plantUml') + '...', function()
 	        {
-	            var dlg = new ParseDialog(ui, 'Insert from Text', 'plantUml');
+	            var dlg = new ParseDialog(ui, mxResources.get('plantUml') + '...', 'plantUml');
 	            ui.showDialog(dlg.container, 620, 420, true, false);
 	            dlg.init();
 	        }));
         }
+        
+    	ui.actions.put('mermaid', new Action(mxResources.get('mermaid') + '...', function()
+        {
+            var dlg = new ParseDialog(ui, mxResources.get('mermaid') + '...', 'mermaid');
+            ui.showDialog(dlg.container, 620, 420, true, false);
+            dlg.init();
+        }));
 
         this.put('diagram', new Menu(mxUtils.bind(this, function(menu, parent)
         {
@@ -892,6 +899,11 @@ EditorUi.initMinimalTheme = function()
         })));
 
         var langMenu = this.get('language');
+        
+        this.put('table', new Menu(mxUtils.bind(this, function(menu, parent)
+		{
+			ui.menus.addInsertTableCellItem(menu, parent);
+		})));
 
         // Extras menu is labelled preferences but keeps ID for extensions
         this.put('extras', new Menu(mxUtils.bind(this, function(menu, parent)
@@ -929,7 +941,7 @@ EditorUi.initMinimalTheme = function()
         
         this.put('insertAdvanced', new Menu(mxUtils.bind(this, function(menu, parent)
         {
-            ui.menus.addMenuItems(menu, ['importText', 'plantUml', '-', 'formatSql', 'importCsv', '-', 'createShape', 'editDiagram'], parent);
+            ui.menus.addMenuItems(menu, ['importText', 'plantUml', 'mermaid', '-', 'formatSql', 'importCsv', '-', 'createShape', 'editDiagram'], parent);
         })));
         
         (mxUtils.bind(this, function()
@@ -940,6 +952,7 @@ EditorUi.initMinimalTheme = function()
 			insertMenu.funct = function(menu, parent)
 			{
 				insertMenuFunct.apply(this, arguments);
+				ui.menus.addSubmenu('table', menu, parent);
 				menu.addSeparator(parent);
 				ui.menus.addMenuItems(menu, ['-', 'toggleShapes'], parent);
 			};

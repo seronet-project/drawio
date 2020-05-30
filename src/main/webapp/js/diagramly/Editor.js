@@ -372,6 +372,9 @@
 		'## In addition to label, an optional fromlabel and tolabel can be used to name the column\n' +
 		'## that contains the text for the label in the edges source or target (invert ignored).\n' +
 		'## The label is concatenated in the form fromlabel + label + tolabel if all are defined.\n' +
+		'## Additional labels can be added by using an optional labels array with entries of the\n' +
+		'## form {"label": string, "x": number, "y": number, "dx": number, "dy": number} where\n' +
+		'## x is from -1 to 1 along the edge, y is orthogonal, and dx/dy are offsets in pixels.\n' +
 		'## The target column may contain a comma-separated list of values.\n' +
 		'## Multiple connect entries are allowed.\n' +
 		'#\n' +
@@ -1484,28 +1487,7 @@
 	 */
 	Editor.prototype.isCorsEnabledForUrl = function(url)
 	{
-		//Disable proxy for electron since it doesn't exist (it is served locally) and it works with most of the sites
-		//The same with Chrome App, never use proxy
-		if (mxClient.IS_CHROMEAPP || EditorUi.isElectronApp)
-		{
-			return true;
-		}
-		
-		if (urlParams['cors'] != null && this.corsRegExp == null)
-		{
-			this.corsRegExp = new RegExp(decodeURIComponent(urlParams['cors']));
-		}
-		
-		// No access-control-allow-origin for some Iconfinder images, add this when fixed:
-		// /^https?:\/\/[^\/]*\.iconfinder.com\//.test(url) ||
-		return (this.corsRegExp != null && this.corsRegExp.test(url)) ||
-			url.substring(0, 34) === 'https://raw.githubusercontent.com/' ||
-			url.substring(0, 23) === 'https://cdn.rawgit.com/' ||
-			url.substring(0, 19) === 'https://rawgit.com/' ||
-			/^https?:\/\/[^\/]*\.blob.core.windows.net\//.test(url) ||
-			/^https?:\/\/[^\/]*\.diagrams\.net\/proxy/.test(url) ||
-			/^https?:\/\/[^\/]*\.draw\.io\/proxy/.test(url) ||
-			/^https?:\/\/[^\/]*\.github\.io\//.test(url);
+		return mxClient.IS_CHROMEAPP || EditorUi.isElectronApp;
 	};
 	
 	/**
