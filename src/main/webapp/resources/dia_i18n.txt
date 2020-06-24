@@ -635,6 +635,7 @@ robot=Robot·one
 rotate=rotate
 rotateTooltip=rotateTooltip
 rotation=rotation
+rough=rough
 rounded=rounded
 save=save
 saveAndExit=saveAndExit

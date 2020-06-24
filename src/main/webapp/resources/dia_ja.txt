@@ -635,6 +635,7 @@ robot=Robot·one
 rotate=90°回転
 rotateTooltip=クリック&ドラッグで回転 / クリックで90°回転
 rotation=回転
+rough=Rough
 rounded=角丸
 save=保存
 saveAndExit=保存して閉じる

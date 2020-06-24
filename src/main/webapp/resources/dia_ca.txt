@@ -635,6 +635,7 @@ robot=Robot·one
 rotate=Gira
 rotateTooltip=Feu clic i arrossegueu per girar, feu clic per girar 90 graus
 rotation=Rotació
+rough=Rough
 rounded=Arrodonit
 save=Desa
 saveAndExit=Desa i surt

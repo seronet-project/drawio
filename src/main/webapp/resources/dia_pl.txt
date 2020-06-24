@@ -635,6 +635,7 @@ robot=Robot·one
 rotate=Obróć
 rotateTooltip=Kliknij i przeciągnij, aby obrócić; kliknij, aby przekręcić o 90 stopni
 rotation=Obrót
+rough=Rough
 rounded=Zaokrąglony
 save=Zapisz
 saveAndExit=Zapisz i wyjdź

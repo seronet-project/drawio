@@ -635,6 +635,7 @@ robot=Robot·one
 rotate=Putar
 rotateTooltip=Klik dan seret untuk memutar, klik untuk memutar sehingga 90 darjah
 rotation=Putaran
+rough=Rough
 rounded=Bulat
 save=Simpan
 saveAndExit=Simpan & Keluar

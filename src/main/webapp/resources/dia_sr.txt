@@ -635,6 +635,7 @@ robot=Robot·one
 rotate=Rotiraj
 rotateTooltip=Klikni i vuci za rotiranje, klikni za okretanje po 90 stepeni
 rotation=Rotacija
+rough=Rough
 rounded=Zaobljen
 save=Snimi
 saveAndExit=Save & Exit
