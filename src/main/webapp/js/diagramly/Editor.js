@@ -34,12 +34,69 @@
 	Editor.prototype.libraryFileTypes = [{description: 'Library (.drawiolib, .xml)', extensions: ['drawiolib', 'xml']}];
 
 	/**
-	 * Known extensions for own files.
+	 * Additional help text for special file extensions.
 	 */
 	Editor.prototype.fileExtensions = [
 		{ext: 'html', title: 'filetypeHtml'},
 		{ext: 'png', title: 'filetypePng'},
 		{ext: 'svg', title: 'filetypeSvg'}];
+	
+	/**
+	 * 
+	 */
+	Editor.styles = [{},
+		{commonStyle: {fontColor: '#5C5C5C', strokeColor: '#006658', fillColor: '#21C0A5'}},
+		{commonStyle: {fontColor: '#095C86', strokeColor: '#AF45ED', fillColor: '#F694C1'},
+			edgeStyle: {strokeColor: '#60E696'}},
+		{commonStyle: {fontColor: '#46495D', strokeColor: '#788AA3', fillColor: '#B2C9AB'}},
+		{commonStyle: {fontColor: '#5AA9E6', strokeColor: '#FF6392', fillColor: '#FFE45E'}},
+		{commonStyle: {fontColor: '#1D3557', strokeColor: '#457B9D', fillColor: '#A8DADC'},	
+			graph: {background: '#F1FAEE'}},
+		{commonStyle: {fontColor: '#393C56', strokeColor: '#E07A5F', fillColor: '#F2CC8F'},	
+			graph: {background: '#F4F1DE', gridColor: '#D4D0C0'}},
+		{commonStyle: {fontColor: '#143642', strokeColor: '#0F8B8D', fillColor: '#FAE5C7'},
+			edgeStyle: {strokeColor: '#A8201A'},
+			graph: {background: '#DAD2D8', gridColor: '#ABA4A9'}},
+		{commonStyle: {fontColor: '#FEFAE0', strokeColor: '#DDA15E', fillColor: '#BC6C25'},
+			graph: {background: '#283618', gridColor: '#48632C'}},
+		{commonStyle: {fontColor: '#E4FDE1', strokeColor: '#028090', fillColor: '#F45B69'},
+			graph: {background: '#114B5F', gridColor: '#0B3240'}},
+		{},
+		{vertexStyle: {strokeColor: '#D0CEE2', fillColor: '#FAD9D5'},
+			edgeStyle: {strokeColor: '#09555B'},
+			commonStyle: {fontColor: '#1A1A1A'}},
+		{vertexStyle: {strokeColor: '#BAC8D3', fillColor: '#09555B', fontColor: '#EEEEEE'},
+			edgeStyle: {strokeColor: '#0B4D6A'}},
+		{vertexStyle: {strokeColor: '#D0CEE2', fillColor: '#5D7F99'},
+			edgeStyle: {strokeColor: '#736CA8'},
+			commonStyle: {fontColor: '#1A1A1A'}},
+		{vertexStyle: {strokeColor: '#FFFFFF', fillColor: '#182E3E', fontColor: '#FFFFFF'},
+			edgeStyle: {strokeColor: '#23445D'},
+			graph: {background: '#FCE7CD', gridColor: '#CFBDA8'}},
+		{vertexStyle: {strokeColor: '#FFFFFF', fillColor: '#F08E81'},
+			edgeStyle: {strokeColor: '#182E3E'},
+			commonStyle: {fontColor: '#1A1A1A'},
+			graph: {background: '#B0E3E6', gridColor: '#87AEB0'}},
+		{vertexStyle: {strokeColor: '#909090', fillColor: '#F5AB50'},
+			edgeStyle: {strokeColor: '#182E3E'},
+			commonStyle: {fontColor: '#1A1A1A'},
+			graph: {background: '#EEEEEE'}},
+		{vertexStyle: {strokeColor: '#EEEEEE', fillColor: '#56517E', fontColor: '#FFFFFF'},
+			edgeStyle: {strokeColor: '#182E3E'},
+			graph: {background: '#FAD9D5', gridColor: '#BFA6A3'}},
+		{vertexStyle: {strokeColor: '#BAC8D3', fillColor: '#B1DDF0', fontColor: '#182E3E'},
+			edgeStyle: {strokeColor: '#EEEEEE', fontColor: '#FFFFFF'},
+			graph: {background: '#09555B', gridColor: '#13B4C2'}},
+		{vertexStyle: {fillColor: '#EEEEEE', fontColor: '#1A1A1A'},
+			edgeStyle: {fontColor: '#FFFFFF'},
+			commonStyle: {strokeColor: '#FFFFFF'},
+			graph: {background: '#182E3E', gridColor: '#4D94C7'}}
+	];
+	
+	/**
+	 * 
+	 */
+	Editor.saveImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iYmxhY2siIHdpZHRoPSIxOHB4IiBoZWlnaHQ9IjE4cHgiPjxwYXRoIGQ9Ik0wIDBoMjR2MjRIMHoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTkgMTJ2N0g1di03SDN2N2MwIDEuMS45IDIgMiAyaDE0YzEuMSAwIDItLjkgMi0ydi03aC0yem0tNiAuNjdsMi41OS0yLjU4TDE3IDExLjVsLTUgNS01LTUgMS40MS0xLjQxTDExIDEyLjY3VjNoMnoiLz48L3N2Zz4=';
 
 	/**
 	 * Used in the GraphViewer lightbox.
@@ -172,6 +229,11 @@
 	 * mxSettings.parse, then the settings are reset.
 	 */
 	Editor.configVersion = null;
+
+	/**
+	 * Default border for image export (to allow for sketch style).
+	 */
+	Editor.defaultBorder = 5;
 
 	/**
 	 * Common properties for all edges.
@@ -1615,6 +1677,11 @@
 				EditorUi.templateFile = config.templateFile;
 			}
 			
+			if (config.styles != null)
+			{
+				Editor.styles = config.styles;
+			}
+			
 			if (config.globalVars != null)
 			{
 				Editor.globalVars = config.globalVars;
@@ -2994,7 +3061,7 @@
 				bg = (keepTheme) ? this.graph.defaultPageBackgroundColor : '#ffffff';;
 			}
 			
-			this.convertImages(graph.getSvg(null, null, null, noCrop, null, ignoreSelection,
+			this.convertImages(graph.getSvg(null, null, border, noCrop, null, ignoreSelection,
 				null, null, null, addShadow, null, keepTheme), mxUtils.bind(this, function(svgRoot)
 			{
 				try
@@ -3015,8 +3082,8 @@
 								scale = (!limitHeight) ? width / w : Math.min(1, Math.min((width * 3) / (h * 4), width / w));
 							}
 							
-							w = Math.ceil(scale * w) + 2 * border;
-							h = Math.ceil(scale * h) + 2 * border;
+							w = Math.ceil(scale * w);
+							h = Math.ceil(scale * h);
 							
 							canvas.setAttribute('width', w);
 					   		canvas.setAttribute('height', h);
@@ -3039,13 +3106,13 @@
 						   		{			   		
 									window.setTimeout(function()
 									{
-										ctx.drawImage(img, border / scale, border / scale);
+										ctx.drawImage(img, 0, 0);
 										callback(canvas);
 									}, 0);
 						   		}
 						   		else
 						   		{
-						   			ctx.drawImage(img, border / scale, border / scale);
+						   			ctx.drawImage(img, 0, 0);
 						   			callback(canvas);
 						   		}
 						    };
@@ -3063,8 +3130,8 @@
 				                var b = graph.getGraphBounds();
 								var tx = view.translate.x * curViewScale;
 								var ty = view.translate.y * curViewScale;
-								var x0 = tx + (b.x - tx) / curViewScale;
-								var y0 = ty + (b.y - ty) / curViewScale;
+								var x0 = tx + (b.x - tx) / curViewScale - border;
+								var y0 = ty + (b.y - ty) / curViewScale - border;
 								
 								var background = new Image();
 		
@@ -4750,7 +4817,8 @@
 		 */
 		StyleFormatPanel.prototype.addStyles = function(div)
 		{
-			var graph = this.editorUi.editor.graph;
+			var ui = this.editorUi;
+			var graph = ui.editor.graph;
 			var picker = document.createElement('div');
 			picker.style.whiteSpace = 'nowrap';
 			picker.style.paddingLeft = '24px';
@@ -4796,23 +4864,20 @@
 					}));
 				}))(i);
 				
-				mxEvent.add
-				
 				dots.push(dot);
-				
 				switcher.appendChild(dot);
 			}
 			
 			var setScheme = mxUtils.bind(this, function(index)
 			{
-				if (this.editorUi.currentScheme != null)
+				if (this.format.currentScheme != null)
 				{
-					dots[this.editorUi.currentScheme].style.background = 'transparent';
+					dots[this.format.currentScheme].style.background = 'transparent';
 				}
 				
-				this.editorUi.currentScheme = index;
-				updateScheme(this.defaultColorSchemes[this.editorUi.currentScheme]);
-				dots[this.editorUi.currentScheme].style.background = '#84d7ff';
+				this.format.currentScheme = index;
+				updateScheme(this.defaultColorSchemes[this.format.currentScheme]);
+				dots[this.format.currentScheme].style.background = '#84d7ff';
 			});
 			
 			var updateScheme = mxUtils.bind(this, function(colorsets)
@@ -4835,7 +4900,7 @@
 									style = mxUtils.removeStylename(style, stylenames[j]);
 								}
 
-								var defaults = (graph.getModel().isVertex(cells[i])) ? graph.defaultVertexStyle : graph.defaultEdgeStyle;
+								var defaults = (graph.getModel().isVertex(cells[i])) ? ui.initialDefaultVertexStyle : ui.initialdefaultEdgeStyle;
 								
 								if (colorset != null)
 								{
@@ -4926,12 +4991,12 @@
 						}
 						else if (colorset['fill'] == '')
 						{
-							btn.style.backgroundColor = mxUtils.getValue(graph.defaultVertexStyle,
+							btn.style.backgroundColor = mxUtils.getValue(ui.initialDefaultVertexStyle,
 								mxConstants.STYLE_FILLCOLOR, (uiTheme == 'dark') ?'#2a2a2a' : '#ffffff');
 						}
 						else
 						{
-							btn.style.backgroundColor = colorset['fill'] || mxUtils.getValue(graph.defaultVertexStyle,
+							btn.style.backgroundColor = colorset['fill'] || mxUtils.getValue(ui.initialDefaultVertexStyle,
 								mxConstants.STYLE_FILLCOLOR, (uiTheme == 'dark') ?'#2a2a2a' : '#ffffff');
 						}
 						
@@ -4941,12 +5006,12 @@
 						}
 						else if (colorset['stroke'] == '')
 						{
-							btn.style.border = '1px solid ' + mxUtils.getValue(graph.defaultVertexStyle, 
+							btn.style.border = '1px solid ' + mxUtils.getValue(ui.initialDefaultVertexStyle, 
 								mxConstants.STYLE_STROKECOLOR, (uiTheme != 'dark') ?'#2a2a2a' : '#ffffff');
 						}
 						else
 						{
-							btn.style.border = '1px solid ' + (colorset['stroke'] || mxUtils.getValue(graph.defaultVertexStyle,
+							btn.style.border = '1px solid ' + (colorset['stroke'] || mxUtils.getValue(ui.initialDefaultVertexStyle,
 									mxConstants.STYLE_STROKECOLOR, (uiTheme != 'dark') ?'#2a2a2a' : '#ffffff'));
 						}
 					}
@@ -4975,13 +5040,13 @@
 				}
 			});
 
-			if (this.editorUi.currentScheme == null)
+			if (this.format.currentScheme == null)
 			{
 				setScheme((uiTheme == 'dark') ? 1 : 0);
 			}
 			else
 			{
-				setScheme(this.editorUi.currentScheme);
+				setScheme(this.format.currentScheme);
 			}
 			
 			var bottom = (this.defaultColorSchemes.length <= maxEntries) ? 28 : 8;
@@ -4992,7 +5057,7 @@
 			
 			mxEvent.addListener(left, 'click', mxUtils.bind(this, function()
 			{
-				setScheme(mxUtils.mod(this.editorUi.currentScheme - 1, this.defaultColorSchemes.length));
+				setScheme(mxUtils.mod(this.format.currentScheme - 1, this.defaultColorSchemes.length));
 			}));
 			
 			var right = document.createElement('div');
@@ -5007,7 +5072,7 @@
 			
 			mxEvent.addListener(right, 'click', mxUtils.bind(this, function()
 			{
-				setScheme(mxUtils.mod(this.editorUi.currentScheme + 1, this.defaultColorSchemes.length));
+				setScheme(mxUtils.mod(this.format.currentScheme + 1, this.defaultColorSchemes.length));
 			}));
 			
 			// Hover state
@@ -5026,7 +5091,7 @@
 			addHoverState(left);
 			addHoverState(right);
 			
-			updateScheme(this.defaultColorSchemes[this.editorUi.currentScheme]);
+			updateScheme(this.defaultColorSchemes[this.format.currentScheme]);
 			
 			if (this.defaultColorSchemes.length <= maxEntries)
 			{

@@ -13,56 +13,6 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 	div.style.paddingTop = '0px';
 	div.style.paddingBottom = '20px';
 	
-	var elt = editorUi.addLanguageMenu(div, true);
-	var bottom = '28px';
-	
-	if (elt != null)
-	{
-		elt.style.bottom = parseInt(bottom) - 3 + 'px';
-	}
-	
-	if (!editorUi.isOffline() && editorUi.getServiceCount() > 1)
-	{
-		var help = document.createElement('a');
-		help.setAttribute('href', 'https://about.draw.io/support/');
-		help.setAttribute('title', mxResources.get('help'));
-		help.setAttribute('target', '_blank');
-		help.style.position = 'absolute';
-		help.style.userSelect = 'none';
-		help.style.textDecoration = 'none';
-		help.style.cursor = 'pointer';
-		help.style.fontSize = '12px';
-		help.style.bottom = bottom;
-		help.style.left = '26px';
-		help.style.color = 'gray';
-		
-		var icon = document.createElement('img');
-		mxUtils.setOpacity(icon, 50);
-		icon.style.height = '16px';
-		icon.style.width = '16px';
-		icon.setAttribute('border', '0');
-		icon.setAttribute('valign', 'bottom');
-		icon.setAttribute('src', Editor.helpImage);
-		icon.style.marginRight = '2px';
-		help.appendChild(icon);
-		
-		mxUtils.write(help, mxResources.get('help'));
-		
-		div.appendChild(help);
-	}
-
-	var demo = document.createElement('div');
-	demo.style.position = 'absolute';
-	demo.style.cursor = 'pointer';
-	demo.style.fontSize = '12px';
-	demo.style.bottom = bottom;
-	demo.style.color = 'gray';
-	demo.style.userSelect = 'none';
-	
-	mxUtils.write(demo, mxResources.get('decideLater'));
-	mxUtils.setPrefixedStyle(demo.style, 'transform', 'translate(-50%,0)');
-	demo.style.left = '50%';
-	
 	this.init = function()
 	{
 		if (mxClient.IS_QUIRKS || document.documentMode == 8)
@@ -70,18 +20,11 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 			demo.style.marginLeft = -Math.round(demo.clientWidth / 2) + 'px';
 		}
 	};
-	
-	div.appendChild(demo);
-	
-	mxEvent.addListener(demo, 'click', function()
-	{
-		editorUi.hideDialog();
-		var prev = Editor.useLocalStorage;
-		editorUi.createFile(editorUi.defaultFilename, null, null, null, null, null, null, true);
-		Editor.useLocalStorage = prev;
-	});
-	
+
 	var buttons = document.createElement('div');
+	buttons.style.border = '1px solid #d3d3d3';
+	buttons.style.borderWidth = '1px 0px 1px 0px';
+	buttons.style.padding = '10px 0px 20px 0px';
 	
 	if (mxClient.IS_QUIRKS)
 	{
@@ -89,19 +32,11 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 		buttons.style.cssFloat = 'left';
 	}
 
-	buttons.style.border = '1px solid #d3d3d3';
-	buttons.style.borderWidth = '1px 0px 1px 0px';
-	buttons.style.padding = '12px 0px 12px 0px';
-
-	var cb = document.createElement('input');
-	cb.setAttribute('type', 'checkbox');
-	cb.setAttribute('checked', 'checked');
-	cb.defaultChecked = true;
 	var count = 0;
-	
 	var container = document.createElement('div');
 	container.style.paddingTop = '2px';
 	buttons.appendChild(container);
+	
 	var p3 = document.createElement('p');
 	
 	function addLogo(img, title, mode, clientName, labels, clientFn)
@@ -120,10 +55,11 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 		button.style.fontSize = '11px';
 		button.style.position = 'relative';
 		button.style.margin = '4px';
-		button.style.marginTop = '2px';
-		button.style.padding = '8px 10px 12px 10px';
+		button.style.marginTop = '8px';
+		button.style.marginBottom = '0px';
+		button.style.padding = '8px 10px 8px 10px';
 		button.style.width = '88px';
-		button.style.height = (StorageDialog.extended) ? '50px' : '100px';
+		button.style.height = '100px';
 		button.style.whiteSpace = 'nowrap';
 		button.setAttribute('title', title);
 		
@@ -137,6 +73,12 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 		var label = document.createElement('div');
 		label.style.textOverflow = 'ellipsis';
 		label.style.overflow = 'hidden';
+		label.style.position = 'absolute';
+		label.style.bottom = '8px';
+		label.style.left = '0px';
+		label.style.right = '0px';
+		mxUtils.write(label, title);
+		button.appendChild(label);
 		
 		if (img != null)
 		{
@@ -144,9 +86,9 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 			logo.setAttribute('src', img);
 			logo.setAttribute('border', '0');
 			logo.setAttribute('align', 'absmiddle');
-			logo.style.width = (StorageDialog.extended) ? '24px' : '60px';
-			logo.style.height = (StorageDialog.extended) ? '24px' : '60px';
-			logo.style.paddingBottom = (StorageDialog.extended) ? '4px' : '6px';
+			logo.style.width = '60px';
+			logo.style.height = '60px';
+			logo.style.paddingBottom = '6px';
 
 			button.appendChild(logo);
 		}
@@ -167,24 +109,6 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 				label.style.marginTop = '-2px';
 			}
 		}
-		
-		if (StorageDialog.extended)
-		{
-			button.style.paddingTop = '4px';
-			button.style.marginBottom = '0px';
-			label.display = 'inline-block';
-			
-			if (rowLimit == 2)
-			{
-				logo.style.width = '38px';
-				logo.style.height = '38px';
-				button.style.width = '80px';
-				button.style.height = '68px';
-			}
-		}
-		
-		button.appendChild(label);
-		mxUtils.write(label, title);
 		
 		if (labels != null)
 		{
@@ -210,7 +134,7 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 					editorUi.drive.checkToken(mxUtils.bind(this, function()
 					{
 						editorUi.spinner.stop();
-						editorUi.setMode(mode, cb.checked);
+						editorUi.setMode(mode, true);
 						fn();
 					}));
 				}
@@ -220,13 +144,13 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 					editorUi.oneDrive.checkToken(mxUtils.bind(this, function()
 					{
 						editorUi.spinner.stop();
-						editorUi.setMode(mode, cb.checked);
+						editorUi.setMode(mode, true);
 						fn();
 					}));
 				}
 				else
 				{
-					editorUi.setMode(mode, cb.checked);
+					editorUi.setMode(mode, true);
 					fn();
 				}
 			});
@@ -291,12 +215,7 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 	};
 
 	var hd = document.createElement('p');
-	hd.style.fontSize = '16pt';
-	hd.style.padding = '0px';
-	hd.style.paddingTop = '4px';
-	hd.style.paddingBottom = '16px';
-	hd.style.margin = '0px';
-	hd.style.color = 'gray';
+	hd.style.cssText = 'font-size:22px;padding:4px 0 16px 0;margin:0;color:gray;';
 	mxUtils.write(hd, mxResources.get('saveDiagramsTo') + ':');
 	div.appendChild(hd);
 	
@@ -321,180 +240,40 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 			addLogo(IMAGE_PATH + '/osa_database.png', mxResources.get('browser'), App.MODE_BROWSER);
 		}
 		
-		if (StorageDialog.extended)
+		if (typeof window.DropboxClient === 'function')
 		{
-			if (typeof window.DropboxClient === 'function')
-			{
-				addLogo(IMAGE_PATH + '/dropbox-logo.svg', mxResources.get('dropbox'), App.MODE_DROPBOX, 'dropbox');
-			}
-	
-			if (editorUi.gitHub != null)
-			{
-				addLogo(IMAGE_PATH + '/github-logo.svg', mxResources.get('github'), App.MODE_GITHUB, 'gitHub');
-			}
-			
-			if (editorUi.gitLab != null)
-			{
-				addLogo(IMAGE_PATH + '/gitlab-logo.svg', mxResources.get('gitlab'), App.MODE_GITLAB, 'gitLab');
-			}
+			addLogo(IMAGE_PATH + '/dropbox-logo.svg', mxResources.get('dropbox'), App.MODE_DROPBOX, 'dropbox');
+		}
+
+		if (editorUi.gitHub != null)
+		{
+			addLogo(IMAGE_PATH + '/github-logo.svg', mxResources.get('github'), App.MODE_GITHUB, 'gitHub');
+		}
+		
+		if (editorUi.gitLab != null)
+		{
+			addLogo(IMAGE_PATH + '/gitlab-logo.svg', mxResources.get('gitlab'), App.MODE_GITLAB, 'gitLab');
 		}
 	};
 	
 	div.appendChild(buttons);
 	addButtons();
-	
-	var p2 = document.createElement('p');
-	p2.style.marginTop = '8px';
-	p2.style.marginBottom = '6px';
-	
-	var temp = document.createElement('div');
-	temp.style.marginBottom = '10px';
-	
-	if (!editorUi.isOfflineApp())
-	{
-		var showMore = document.createElement('a');
-		showMore.style.color = 'gray';
-		showMore.style.fontSize = '12px';
-		showMore.style.cursor = 'pointer';
-		showMore.style.userSelect = 'none';
-		mxUtils.write(showMore, ((StorageDialog.extended) ? mxResources.get('showLess') : mxResources.get('showMore')) + '...');
-		
-		temp.appendChild(showMore);
-		p2.appendChild(temp);
-		
-		mxEvent.addListener(showMore, 'click', function(evt)
-		{
-			container.innerHTML = '';
-			showMore.innerHTML = '';
-			StorageDialog.extended = !StorageDialog.extended;
-			addButtons();
-			mxUtils.write(showMore, ((StorageDialog.extended) ? mxResources.get('showLess') : mxResources.get('showMore')) + '...');
-			mxEvent.consume(evt);
-		});
-	}
 
-	p2.appendChild(cb);
-	
-	var span = document.createElement('span');
-	span.style.color = 'gray';
-	span.style.fontSize = '12px';
-	span.style.userSelect = 'none';
-	mxUtils.write(span, ' ' + mxResources.get('rememberThisSetting'));
-	p2.appendChild(span);
-	mxUtils.br(p2);
-	
-	var recent = editorUi.getRecent();
+	var later = document.createElement('span');
+	later.style.cssText = 'position:absolute;cursor:pointer;bottom:27px;color:gray;userSelect:none;text-align:center;left:50%;';
+	mxUtils.setPrefixedStyle(later.style, 'transform', 'translate(-50%,0)');
+	mxUtils.write(later, mxResources.get('decideLater'));
 
-	if (!editorUi.isOfflineApp() && recent != null && recent.length > 0)
+	mxEvent.addListener(later, 'click', function()
 	{
-		var recentSelect = document.createElement('select');
-		recentSelect.style.marginTop = '8px';
-		recentSelect.style.maxWidth = '170px';
-
-		var titleOption = document.createElement('option');
-		titleOption.setAttribute('value', '');
-		titleOption.setAttribute('selected', 'selected');
-		titleOption.style.textAlign = 'center';
-		mxUtils.write(titleOption, mxResources.get('openRecent') + '...');
-		recentSelect.appendChild(titleOption);
-		
-		for (var i = 0; i < recent.length; i++)
-		{
-			(function(entry)
-			{
-				var modeKey = entry.mode;
-				
-				// Google and oneDrive use different keys
-				if (modeKey == App.MODE_GOOGLE)
-				{
-					modeKey = 'googleDrive';
-				}
-				else if (modeKey == App.MODE_ONEDRIVE)
-				{
-					modeKey = 'oneDrive';
-				}
-				
-				var entryOption = document.createElement('option');
-				entryOption.setAttribute('value', entry.id);
-				mxUtils.write(entryOption, entry.title + ' (' + mxResources.get(modeKey) + ')');
-				recentSelect.appendChild(entryOption);
-			})(recent[i]);
-		}
-
-		p2.appendChild(recentSelect);
-		
-		mxEvent.addListener(recentSelect, 'change', function(evt)
-		{
-			if (recentSelect.value != '')
-			{
-				editorUi.loadFile(recentSelect.value);
-			}
-		});
-	}
-	else
-	{
-		p2.style.marginTop = '20px';
-		buttons.style.padding = '30px 0px 26px 0px';
-	}
-	
-	if (Graph.fileSupport)
-	{
-		var temp = document.createElement('div');
-		temp.style.marginBottom = '10px';
-		temp.style.padding = '18px 0px 6px 0px';
-		
-		var link = document.createElement('a');
-		link.style.cursor = 'pointer';
-		link.style.fontSize = '12px';
-		link.style.color = 'gray';
-		link.style.userSelect = 'none';
-		
-		mxUtils.write(link, mxResources.get('import') + ': ' + mxResources.get('gliffy') + ', ' +
-				mxResources.get('formatVssx') + ', ' + mxResources.get('formatVsdx') + ', ' +
-				mxResources.get('lucidchart') + '...');
-		
-		mxEvent.addListener(link, 'click', function()
-		{
-			if (editorUi.storageFileInputElt == null) 
-			{
-				var input = document.createElement('input');
-				input.setAttribute('type', 'file');
-				
-				mxEvent.addListener(input, 'change', function()
-				{
-					if (input.files != null)
-					{
-						// Using null for position will disable crop of input file
-						editorUi.hideDialog();
-						editorUi.openFiles(input.files, true);
-						
-			    		// Resets input to force change event for same file (type reset required for IE)
-						input.type = '';
-						input.type = 'file';
-			    		input.value = '';
-					}
-				});
-				
-				input.style.display = 'none';
-				document.body.appendChild(input);
-				editorUi.storageFileInputElt = input;
-			}
-			
-			editorUi.storageFileInputElt.click();
-		});
-		
-		temp.appendChild(link);
-		p2.appendChild(temp);
-		buttons.style.paddingBottom = '4px';
-	}
-	
-	buttons.appendChild(p2);
-	
-	mxEvent.addListener(span, 'click', function(evt)
-	{
-		cb.checked = !cb.checked;
-		mxEvent.consume(evt);
+		editorUi.hideDialog();
+		var prev = Editor.useLocalStorage;
+		editorUi.createFile(editorUi.defaultFilename,
+			null, null, null, null, null, null, true);
+		Editor.useLocalStorage = prev;
 	});
+
+	div.appendChild(later);
 
 	// Checks if Google Drive is missing after a 5 sec delay
 	if (mxClient.IS_SVG && isLocalStorage && urlParams['gapi'] != '0' &&
@@ -506,13 +285,13 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 			{
 				// To check for Disconnect plugin in chrome use mxClient.IS_GC and check for URL:
 				// chrome-extension://jeoacafpbcihiomhlakheieifhpjdfeo/scripts/vendor/jquery/jquery-2.0.3.min.map
-				p3.style.padding = '8px';
+				p3.style.padding = '7px';
 				p3.style.fontSize = '9pt';
 				p3.style.marginTop = '-14px';
-				p3.innerHTML = '<a style="background-color:#dcdcdc;padding:5px;color:black;text-decoration:none;" ' +
+				p3.innerHTML = '<a style="background-color:#dcdcdc;padding:6px;color:black;text-decoration:none;" ' +
 					'href="https://desk.draw.io/a/solutions/articles/16000074659" target="_blank">' +
-					'<img border="0" src="' + mxGraph.prototype.warningImage.src + '" align="top"> ' +
-					mxResources.get('googleDriveMissingClickHere') + '</a>';
+					'<img border="0" src="' + mxGraph.prototype.warningImage.src + '" align="absmiddle" ' +
+					'style="margin-top:-4px"> ' + mxResources.get('googleDriveMissingClickHere') + '</a>';
 				div.appendChild(p3);
 			}
 		}, 5000);
@@ -522,11 +301,6 @@ var StorageDialog = function(editorUi, fn, rowLimit)
 };
 
 /**
- * 
- */
-StorageDialog.extended = false;
-
-/**
  * Constructs a dialog for creating new files from templates.
  */
 var SplashDialog = function(editorUi)
@@ -534,59 +308,28 @@ var SplashDialog = function(editorUi)
 	var div = document.createElement('div');
 	div.style.textAlign = 'center';
 	
-	var elt = editorUi.addLanguageMenu(div, true);
-	
-	if (elt != null)
+	if (mxClient.IS_CHROMEAPP || EditorUi.isElectronApp)
 	{
-		elt.style.bottom = '19px';
+		var elt = editorUi.addLanguageMenu(div, true);
+		
+		if (elt != null)
+		{
+			elt.style.bottom = '19px';
+		}
 	}
 	
-	var help = null;
 	var serviceCount = editorUi.getServiceCount();
-	
-	if (!editorUi.isOffline() && serviceCount > 1)
-	{
-		help = document.createElement('a');
-		help.setAttribute('href', 'https://about.draw.io/support/');
-		help.setAttribute('title', mxResources.get('help'));
-		help.setAttribute('target', '_blank');
-		help.style.position = 'absolute';
-		help.style.fontSize = '12px';
-		help.style.textDecoration = 'none';
-		help.style.cursor = 'pointer';
-		help.style.bottom = '22px';
-		help.style.left = '26px';
-		help.style.color = 'gray';
-
-		var icon = document.createElement('img');
-		mxUtils.setOpacity(icon, 50);
-		icon.style.height = '16px';
-		icon.style.width = '16px';
-		icon.setAttribute('border', '0');
-		icon.setAttribute('valign', 'bottom');
-		icon.setAttribute('src', Editor.helpImage);
-		icon.style.marginRight = '2px';
-		help.appendChild(icon);
-		
-		mxUtils.write(help, mxResources.get('help'));
-		
-		div.appendChild(help);
-	}
-
-	var hd = document.createElement('p');
-	hd.style.fontSize = '16pt';
-	hd.style.padding = '0px';
-	hd.style.paddingTop = '2px';
-	hd.style.margin = '0px';
-	hd.style.color = 'gray';
-	
 	var logo = document.createElement('img');
 	logo.setAttribute('border', '0');
 	logo.setAttribute('align', 'absmiddle');
-	logo.style.width = '40px';
-	logo.style.height = '40px';
-	logo.style.marginRight = '12px';
-	logo.style.paddingBottom = '4px';
+	logo.style.width = '32px';
+	logo.style.height = '32px';
+	logo.style.marginRight = '8px';
+	logo.style.marginTop = '-4px';
+	
+	var buttons = document.createElement('div');
+	buttons.style.margin = '8px 0px 0px 0px';
+	buttons.style.padding = '18px 0px 24px 0px';
 	
 	var service = '';
 	
@@ -628,27 +371,60 @@ var SplashDialog = function(editorUi)
 	else
 	{
 		logo.src = IMAGE_PATH + '/osa_drive-harddisk.png';
+		buttons.style.paddingBottom = '10px';
+		buttons.style.paddingTop = '30px';
 		service = mxResources.get('device');
 	}
 
-	var buttons = document.createElement('div');
-	buttons.style.margin = '4px 0px 0px 0px';
-	
 	var btn = document.createElement('button');
 	btn.className = 'geBigButton';
+	btn.style.marginBottom = '8px';
 	btn.style.fontSize = '18px';
 	btn.style.padding = '10px';
 	btn.style.width = '340px';
 	
 	if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp)
 	{
-		hd.appendChild(logo);
-		mxUtils.write(hd, service);
-		div.appendChild(hd);
 		buttons.style.border = '1px solid #d3d3d3';
 		buttons.style.borderWidth = '1px 0px 1px 0px';
-		buttons.style.padding = '18px 0px 24px 0px';
-		btn.style.marginBottom = '8px';
+	
+		var table = document.createElement('table');
+		var tbody = document.createElement('tbody');
+		var row = document.createElement('tr');
+		var left = document.createElement('td');
+		var right = document.createElement('td');
+		table.setAttribute('align', 'center');
+		left.appendChild(logo);
+		
+		var title = document.createElement('div');
+		title.style.fontSize = '22px';
+		title.style.paddingBottom = '6px';
+		title.style.color = 'gray';
+		mxUtils.write(title, service);
+		
+		right.style.textAlign = 'left';
+		right.appendChild(title);
+		
+		row.appendChild(left);
+		row.appendChild(right);
+		tbody.appendChild(row);
+		table.appendChild(tbody);
+		div.appendChild(table);
+	
+		var change = document.createElement('span');
+		change.style.cssText = 'position:absolute;cursor:pointer;bottom:27px;color:gray;userSelect:none;text-align:center;left:50%;';
+		mxUtils.setPrefixedStyle(change.style, 'transform', 'translate(-50%,0)');
+		mxUtils.write(change, mxResources.get('changeStorage'));
+		
+		mxEvent.addListener(change, 'click', function()
+		{
+			editorUi.hideDialog(false);
+			editorUi.setMode(null);
+			editorUi.clearMode();
+			editorUi.showSplash(true);
+		});
+		
+		div.appendChild(change);
 	}
 	else
 	{
@@ -736,14 +512,13 @@ var SplashDialog = function(editorUi)
 	
 	if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp)
 	{
-		var driveUsers = (editorUi.drive != null) ? editorUi.drive.getUsersList() : [];
-		
 		function addLogout(logout)
 		{
 			btn.style.marginBottom = '24px';
 			
 			var link = document.createElement('a');
 			link.style.display = 'inline-block';
+			link.style.color = 'gray';
 			link.style.cursor = 'pointer';
 			link.style.marginTop = '6px';
 			mxUtils.write(link, mxResources.get('signOut'));
@@ -762,69 +537,80 @@ var SplashDialog = function(editorUi)
 			
 			buttons.appendChild(link);
 		};
-		
-		if (editorUi.mode == App.MODE_GOOGLE && driveUsers.length > 0)
-		{
-			var title = document.createElement('span');
-			title.style.marginTop = '6px';
-			mxUtils.write(title, mxResources.get('changeUser') + ':');
-
-			// Makes room after last big buttons
-			btn.style.marginBottom = '16px';
-			buttons.style.paddingBottom = '18px';
-			
-			buttons.appendChild(title);
-			
-			var usersSelect = document.createElement('select');
-			usersSelect.style.marginLeft = '4px';
-			usersSelect.style.width = '200px';
-			
-			for (var i = 0; i < driveUsers.length; i++)
-			{
-				var option = document.createElement('option');
-				mxUtils.write(option, driveUsers[i].displayName);
-				option.value = i;
-				usersSelect.appendChild(option);
-				//More info (email) about the user in a disabled option
-				option = document.createElement('option');
-				option.innerHTML = '&nbsp;&nbsp;&nbsp;';
-				mxUtils.write(option, '<' + driveUsers[i].email + '>');
-				option.setAttribute('disabled', 'disabled');
-				usersSelect.appendChild(option);
-			}
-			
-			//Add account option
-			var option = document.createElement('option');
-			mxUtils.write(option, mxResources.get('addAccount'));
-			option.value = driveUsers.length;
-			usersSelect.appendChild(option);
-			
-			mxEvent.addListener(usersSelect, 'change', function()
-			{
-				var userIndex = usersSelect.value;
-				var existingAccount = driveUsers.length != userIndex;
 				
-				if (existingAccount)
+		if (editorUi.mode == App.MODE_GOOGLE && editorUi.drive != null)
+		{
+			var driveUsers =editorUi.drive.getUsersList();
+		
+			if (driveUsers.length > 0)
+			{
+				var title = document.createElement('span');
+				title.style.marginTop = '6px';
+				mxUtils.write(title, mxResources.get('changeUser') + ':');
+	
+				// Makes room after last big buttons
+				btn.style.marginBottom = '16px';
+				buttons.style.paddingBottom = '18px';
+				buttons.appendChild(title);
+				
+				var usersSelect = document.createElement('select');
+				usersSelect.style.marginLeft = '4px';
+				usersSelect.style.width = '140px';
+				
+				for (var i = 0; i < driveUsers.length; i++)
 				{
-					editorUi.drive.setUser(driveUsers[userIndex]);
+					var option = document.createElement('option');
+					mxUtils.write(option, driveUsers[i].displayName);
+					option.value = i;
+					usersSelect.appendChild(option);
+					//More info (email) about the user in a disabled option
+					option = document.createElement('option');
+					option.innerHTML = '&nbsp;&nbsp;&nbsp;';
+					mxUtils.write(option, '<' + driveUsers[i].email + '>');
+					option.setAttribute('disabled', 'disabled');
+					usersSelect.appendChild(option);
 				}
 				
-				editorUi.drive.authorize(existingAccount, function()
+				//Add account option
+				var option = document.createElement('option');
+				mxUtils.write(option, mxResources.get('addAccount'));
+				option.value = driveUsers.length;
+				usersSelect.appendChild(option);
+				
+				mxEvent.addListener(usersSelect, 'change', function()
 				{
-					editorUi.setMode(App.MODE_GOOGLE);
-					editorUi.hideDialog();
-					editorUi.showSplash();
-				}, function(resp)
-				{
-					editorUi.handleError(resp, null, function()
+					var userIndex = usersSelect.value;
+					var existingAccount = driveUsers.length != userIndex;
+					
+					if (existingAccount)
 					{
+						editorUi.drive.setUser(driveUsers[userIndex]);
+					}
+					
+					editorUi.drive.authorize(existingAccount, function()
+					{
+						editorUi.setMode(App.MODE_GOOGLE);
 						editorUi.hideDialog();
 						editorUi.showSplash();
-					});
-				}, true);
-			});
-			
-			buttons.appendChild(usersSelect);
+					}, function(resp)
+					{
+						editorUi.handleError(resp, null, function()
+						{
+							editorUi.hideDialog();
+							editorUi.showSplash();
+						});
+					}, true);
+				});
+				
+				buttons.appendChild(usersSelect);
+			}
+			else
+			{
+				addLogout(function()
+				{
+					editorUi.drive.logout();
+				});
+			}
 		}
 		else if (editorUi.mode == App.MODE_ONEDRIVE && editorUi.oneDrive != null)
 		{
@@ -868,25 +654,8 @@ var SplashDialog = function(editorUi)
 				editorUi.openLink('https://www.dropbox.com/logout');
 			});
 		}
-		
-		mxUtils.br(buttons);
-		var link = document.createElement('a');
-		link.style.display = 'inline-block';
-		link.style.cursor = 'pointer';
-		link.style.marginTop = '8px';
-		mxUtils.write(link, mxResources.get('changeStorage'));
-		
-		mxEvent.addListener(link, 'click', function()
-		{
-			editorUi.hideDialog(false);
-			editorUi.setMode(null);
-			editorUi.clearMode();
-			editorUi.showSplash(true);
-		});
-		
-		buttons.appendChild(link);
 	}
-		
+
 	div.appendChild(buttons);
 	this.container = div;
 };
@@ -963,7 +732,7 @@ var EmbedDialog = function(editorUi, result, timeout, ignoreSize, previewFn, tit
 			else
 			{
 				text.setAttribute('readonly', 'true');
-				text.value = result.substring(0, 340) + '... (' + mxResources.get('drawingTooLarge') + ')';
+				text.value = mxResources.get('tooLargeUseDownload');
 			}
 		}, 0);
 	};
@@ -6465,7 +6234,7 @@ var FindWindow = function(ui, x, y, w, h)
 	mxEvent.addListener(searchInput, 'keyup', function(evt)
 	{
 		// Ctrl or Cmd keys
-		if (evt.keyCode == 91 || evt.keyCode == 17)
+		if (evt.keyCode == 91 || evt.keyCode == 93 || evt.keyCode == 17)
 		{
 			// Workaround for lost focus on show
 			mxEvent.consume(evt);
@@ -7485,7 +7254,7 @@ var PluginsDialog = function(editorUi, addFn, delFn)
 	div.appendChild(inner);
 	refresh();
 
-	var addBtn = mxUtils.button(mxResources.get('add'), addFn != null? function()
+	var addBtn = mxUtils.button(mxResources.get('add') + '...', addFn != null? function()
 	{
 		addFn(function(newPlugin)
 		{
@@ -7499,57 +7268,75 @@ var PluginsDialog = function(editorUi, addFn, delFn)
 	}
 	: function()
 	{
-		var tmp = '';
-		var param = urlParams['p'];
-	
-		if (param != null && param.length > 0)
+		var div = document.createElement('div');
+		
+		var title = document.createElement('span');
+		title.style.marginTop = '6px';
+		mxUtils.write(title, mxResources.get('builtinPlugins') + ': ');
+		div.appendChild(title);
+		
+		var pluginsSelect = document.createElement('select');
+		pluginsSelect.style.width = '150px';
+		
+		for (var i = 0; i < App.publicPlugin.length; i++)
 		{
-			var tokens = param.split(';');
-			
-			for (var i = 0; i < tokens.length; i++)
-			{
-				var url = App.pluginRegistry[tokens[i]];
-				
-				if (url != null)
-				{
-					tmp += url + ';';
-				}
-			}
-			
-			if (tmp.charAt(tmp.length - 1) == ';')
-			{
-				tmp = tmp.substring(0, tmp.length - 1);
-			}
+			var option = document.createElement('option');
+			mxUtils.write(option, App.publicPlugin[i]);
+			option.value = App.publicPlugin[i];
+			pluginsSelect.appendChild(option);
 		}
 		
-		var dlg = new FilenameDialog(editorUi, tmp, mxResources.get('add'), function(newValue)
+		div.appendChild(pluginsSelect);
+		mxUtils.br(div);
+		mxUtils.br(div);
+		
+		var customBtn = mxUtils.button(mxResources.get('custom') + '...', function()
 		{
-			if (newValue != null && newValue.length > 0)
+			var dlg = new FilenameDialog(editorUi, '', mxResources.get('add'), function(newValue)
 			{
-				tokens = newValue.split(';');
+				editorUi.hideDialog();
 				
-				for (var i = 0; i < tokens.length; i++)
+				if (newValue != null && newValue.length > 0)
 				{
-					var token = tokens[i];
-					var url = App.pluginRegistry[token];
+					var tokens = newValue.split(';');
 					
-					if (url != null)
+					for (var i = 0; i < tokens.length; i++)
 					{
-						token = url;
+						var token = tokens[i];
+						var url = App.pluginRegistry[token];
+						
+						if (url != null)
+						{
+							token = url;
+						}
+						
+						if (token.length > 0 && mxUtils.indexOf(plugins, token) < 0)
+						{
+							plugins.push(token);
+						}
 					}
 					
-					if (token.length > 0 && mxUtils.indexOf(plugins, token) < 0)
-					{
-						plugins.push(token);
-					}
+					refresh();
 				}
-				
+			}, mxResources.get('enterValue') + ' (' + mxResources.get('url') + ')');
+			
+			editorUi.showDialog(dlg.container, 300, 80, true, true);
+			dlg.init();
+		});
+		
+		customBtn.className = 'geBtn';
+					
+		var dlg = new CustomDialog(editorUi, div, mxUtils.bind(this, function()
+		{
+			var token = App.pluginRegistry[pluginsSelect.value];
+			
+			if (mxUtils.indexOf(plugins, token) < 0)
+			{
+				plugins.push(token);
 				refresh();
 			}
-		}, mxResources.get('enterValue') + ' (' + mxResources.get('url') + ')');
-		
+		}), null, null, null, customBtn);
 		editorUi.showDialog(dlg.container, 300, 80, true, true);
-		dlg.init();
 	});
 	
 	addBtn.className = 'geBtn';
@@ -8731,7 +8518,7 @@ var LibraryDialog = function(editorUi, name, library, initialImages, file, mode)
 	    	
     	if (editorUi.isLocalFileSave())
     	{
-    		editorUi.saveLocalFile(data, filename, 'text/xml', null, null, true);
+    		editorUi.saveLocalFile(data, filename, 'text/xml', null, null, true, null, 'xml');
     	}
     	else
     	{
@@ -10687,6 +10474,11 @@ var FilePropertiesDialog = function(editorUi)
 			{
 				editorUi.fileNode.setAttribute('scale', Math.max(0, parseInt(zoomInput.value) / 100));
 				editorUi.fileNode.setAttribute('border', Math.max(0, parseInt(borderInput.value)));
+				
+				if (file != null)
+				{
+					file.fileChanged();
+				}
 			}
 			
 			editorUi.hideDialog();
@@ -10730,6 +10522,11 @@ var FilePropertiesDialog = function(editorUi)
 			if (editorUi.fileNode != null)
 			{
 				editorUi.fileNode.setAttribute('compressed', (compressedInput.checked) ? 'true' : 'false');
+				
+				if (file != null)
+				{
+					file.fileChanged();
+				}
 			}
 			
 			editorUi.hideDialog();

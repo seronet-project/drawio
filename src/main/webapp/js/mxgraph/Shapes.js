@@ -736,13 +736,17 @@
 	};
 	mxUtils.extend(TrapezoidShape, mxActor);
 	TrapezoidShape.prototype.size = 0.2;
+	TrapezoidShape.prototype.fixedSize = 20;
 	TrapezoidShape.prototype.isRoundable = function()
 	{
 		return true;
 	};
 	TrapezoidShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		var dx = w * Math.max(0, Math.min(0.5, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
+		
+		var fixed = mxUtils.getValue(this.style, 'fixedSize', '0') != '0';
+
+		var dx = (fixed) ? Math.max(0, Math.min(w, parseFloat(mxUtils.getValue(this.style, 'size', this.fixedSize)))) : w * Math.max(0, Math.min(0.5, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
 		var arcSize = mxUtils.getValue(this.style, mxConstants.STYLE_ARCSIZE, mxConstants.LINE_ARCSIZE) / 2;
 		this.addPoints(c, [new mxPoint(0, h), new mxPoint(dx, 0), new mxPoint(w - dx, 0), new mxPoint(w, h)],
 				this.isRounded, arcSize, true);
@@ -1220,13 +1224,16 @@
 	};
 	mxUtils.extend(HexagonShape, mxHexagon);
 	HexagonShape.prototype.size = 0.25;
+	HexagonShape.prototype.fixedSize = 20;
 	HexagonShape.prototype.isRoundable = function()
 	{
 		return true;
 	};
 	HexagonShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		var s =  w * Math.max(0, Math.min(1, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
+		var fixed = mxUtils.getValue(this.style, 'fixedSize', '0') != '0';
+		var s = (fixed) ? Math.max(0, Math.min(w, parseFloat(mxUtils.getValue(this.style, 'size', this.fixedSize)))) :
+			w * Math.max(0, Math.min(1, parseFloat(mxUtils.getValue(this.style, 'size', this.size))));
 		var arcSize = mxUtils.getValue(this.style, mxConstants.STYLE_ARCSIZE, mxConstants.LINE_ARCSIZE) / 2;
 		this.addPoints(c, [new mxPoint(s, 0), new mxPoint(w - s, 0), new mxPoint(w, 0.5 * h), new mxPoint(w - s, h),
 		                   new mxPoint(s, h), new mxPoint(0, 0.5 * h)], this.isRounded, arcSize, true);
@@ -1855,7 +1862,8 @@
 	// Trapezoid Perimeter
 	mxPerimeter.TrapezoidPerimeter = function (bounds, vertex, next, orthogonal)
 	{
-		var size = TrapezoidShape.prototype.size;
+		var fixed = mxUtils.getValue(vertex.style, 'fixedSize', '0') != '0';
+		var size = (fixed) ? TrapezoidShape.prototype.fixedSize : TrapezoidShape.prototype.size;
 		
 		if (vertex != null)
 		{
@@ -1874,25 +1882,25 @@
 		
 		if (direction == mxConstants.DIRECTION_EAST)
 		{
-			var dx = w * Math.max(0, Math.min(1, size));
+			var dx = (fixed) ? Math.max(0, Math.min(w, size)) : w * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x + dx, y), new mxPoint(x + w - dx, y),
 						new mxPoint(x + w, y + h), new mxPoint(x, y + h), new mxPoint(x + dx, y)];
 		}
 		else if (direction == mxConstants.DIRECTION_WEST)
 		{
-			var dx = w * Math.max(0, Math.min(1, size));
+			var dx = (fixed) ? Math.max(0, Math.min(w, size)) : w * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x, y), new mxPoint(x + w, y),
 						new mxPoint(x + w - dx, y + h), new mxPoint(x + dx, y + h), new mxPoint(x, y)];
 		}
 		else if (direction == mxConstants.DIRECTION_NORTH)
 		{
-			var dy = h * Math.max(0, Math.min(1, size));
+			var dy = (fixed) ? Math.max(0, Math.min(h, size)) : h * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x, y + dy), new mxPoint(x + w, y),
 						new mxPoint(x + w, y + h), new mxPoint(x, y + h - dy), new mxPoint(x, y + dy)];
 		}
 		else
 		{
-			var dy = h * Math.max(0, Math.min(1, size));
+			var dy = (fixed) ? Math.max(0, Math.min(h, size)) : h * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x, y), new mxPoint(x + w, y + dy),
 						new mxPoint(x + w, y + h - dy), new mxPoint(x, y + h), new mxPoint(x, y)];
 		}		
@@ -1999,7 +2007,8 @@
 	// Hexagon Perimeter 2 (keep existing one)
 	mxPerimeter.HexagonPerimeter2 = function (bounds, vertex, next, orthogonal)
 	{
-		var size = HexagonShape.prototype.size;
+		var fixed = mxUtils.getValue(vertex.style, 'fixedSize', '0') != '0';
+		var size = (fixed) ? HexagonShape.prototype.fixedSize : HexagonShape.prototype.size;
 		
 		if (vertex != null)
 		{
@@ -2023,14 +2032,14 @@
 		
 		if (vertical)
 		{
-			var dy = h * Math.max(0, Math.min(1, size));
+			var dy = (fixed) ? Math.max(0, Math.min(h, size)) : h * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(cx, y), new mxPoint(x + w, y + dy), new mxPoint(x + w, y + h - dy),
 							new mxPoint(cx, y + h), new mxPoint(x, y + h - dy),
 							new mxPoint(x, y + dy), new mxPoint(cx, y)];
 		}
 		else
 		{
-			var dx = w * Math.max(0, Math.min(1, size));
+			var dx = (fixed) ? Math.max(0, Math.min(w, size)) : w * Math.max(0, Math.min(1, size));
 			points = [new mxPoint(x + dx, y), new mxPoint(x + w - dx, y), new mxPoint(x + w, cy),
 						new mxPoint(x + w - dx, y + h), new mxPoint(x + dx, y + h),
 						new mxPoint(x, cy), new mxPoint(x + dx, y)];
@@ -3396,18 +3405,23 @@
 			};
 		};
 		
-		function createTrapezoidHandleFunction(max)
+		function createTrapezoidHandleFunction(max, fixedDefaultValue)
 		{
+			max = (max != null) ? max : 0.5;
+			
 			return function(state)
 			{
 				var handles = [createHandle(state, ['size'], function(bounds)
 				{
-					var size = Math.max(0, Math.min(max, parseFloat(mxUtils.getValue(this.state.style, 'size', TrapezoidShape.prototype.size))));
-				
+					var fixed = (fixedDefaultValue != null) ? mxUtils.getValue(this.state.style, 'fixedSize', '0') != '0' : null;
+					var size = Math.max(0, Math.min(max, parseFloat(mxUtils.getValue(this.state.style, 'size', (fixed) ? 0 : TrapezoidShape.prototype.size))));
 					return new mxPoint(bounds.x + size * bounds.width * 0.75, bounds.y + bounds.height / 4);
 				}, function(bounds, pt)
 				{
-					this.state.style['size'] = Math.max(0, Math.min(max, (pt.x - bounds.x) / (bounds.width * 0.75)));
+					var fixed = (fixedDefaultValue != null) ? mxUtils.getValue(this.state.style, 'fixedSize', '0') != '0' : null;
+					var size = (fixed) ? (pt.x - bounds.x) : Math.max(0, Math.min(max, (pt.x - bounds.x) / bounds.width * 0.75));
+					
+					this.state.style['size'] = size;
 				}, false, true)];
 				
 				if (mxUtils.getValue(state.style, mxConstants.STYLE_ROUNDED, false))
@@ -4054,13 +4068,13 @@
 				}, false)];
 			},
 			'step': createDisplayHandleFunction(StepShape.prototype.size, true, null, true, StepShape.prototype.fixedSize),
-			'hexagon': createDisplayHandleFunction(HexagonShape.prototype.size, true, 0.5, true),
+			'hexagon': createDisplayHandleFunction(HexagonShape.prototype.size, true, 0.5, true, HexagonShape.prototype.fixedSize),
 			'curlyBracket': createDisplayHandleFunction(CurlyBracketShape.prototype.size, false),
 			'display': createDisplayHandleFunction(DisplayShape.prototype.size, false),
 			'cube': createCubeHandleFunction(1, CubeShape.prototype.size, false),
 			'card': createCubeHandleFunction(0.5, CardShape.prototype.size, true),
 			'loopLimit': createCubeHandleFunction(0.5, LoopLimitShape.prototype.size, true),
-			'trapezoid': createTrapezoidHandleFunction(0.5),
+			'trapezoid': createTrapezoidHandleFunction(0.5, HexagonShape.prototype.fixedSize),
 			'parallelogram': createTrapezoidHandleFunction(1)
 		};
 		

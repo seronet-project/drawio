@@ -296,7 +296,12 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 				this.graph2.labelsVisible = (showLabel == null || showLabel);
 				var fo = mxClient.NO_FO;
 				mxClient.NO_FO = Editor.prototype.originalNoForeignObject;
-				this.graph2.addCells(cells);
+				
+				// Applies current style for preview
+				var temp = this.graph2.cloneCells(cells);
+				this.editorUi.insertHandler(temp, null, this.graph2.model);
+				this.graph2.addCells(temp);
+				
 				mxClient.NO_FO = fo;
 				
 				var bounds = this.graph2.getGraphBounds();
@@ -994,7 +999,7 @@ Sidebar.prototype.addGeneralPalette = function(expand)
 	 	this.createVertexTemplateEntry('shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;', 120, 60, '', 'Process', null, null, 'process task'),
 	 	this.createVertexTemplateEntry('rhombus;whiteSpace=wrap;html=1;', 80, 80, '', 'Diamond', null, null, 'diamond rhombus if condition decision conditional question test'),
 	 	this.createVertexTemplateEntry('shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;', 120, 60, '', 'Parallelogram'),
-	 	this.createVertexTemplateEntry('shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;', 120, 80, '', 'Hexagon', null, null, 'hexagon preparation'),
+	 	this.createVertexTemplateEntry('shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;', 120, 80, '', 'Hexagon', null, null, 'hexagon preparation'),
 	 	this.createVertexTemplateEntry('triangle;whiteSpace=wrap;html=1;', 60, 80, '', 'Triangle', null, null, 'triangle logic inverter buffer'),
 	 	this.createVertexTemplateEntry('shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;', 60, 80, '', 'Cylinder', null, null, 'cylinder data database'),
 	 	this.createVertexTemplateEntry('ellipse;shape=cloud;whiteSpace=wrap;html=1;', 120, 80, '', 'Cloud', null, null, 'cloud network'),
@@ -1965,9 +1970,9 @@ Sidebar.prototype.createThumb = function(cells, width, height, parent, title, sh
 	this.graph.addCells(cells);
 	var bounds = this.graph.getGraphBounds();
 	var s = Math.floor(Math.min((width - 2 * this.thumbBorder) / bounds.width,
-			(height - 2 * this.thumbBorder) / bounds.height) * 100) / 100;
+		(height - 2 * this.thumbBorder) / bounds.height) * 100) / 100;
 	this.graph.view.scaleAndTranslate(s, Math.floor((width - bounds.width * s) / 2 / s - bounds.x),
-			Math.floor((height - bounds.height * s) / 2 / s - bounds.y));
+		Math.floor((height - bounds.height * s) / 2 / s - bounds.y));
 	var node = null;
 	
 	// For supporting HTML labels in IE9 standards mode the container is cloned instead
@@ -2324,9 +2329,10 @@ Sidebar.prototype.dropAndConnect = function(source, targets, direction, dropCell
 
 			// Handles special case where target should be ignored for stack layouts
 			var targetParent = graph.model.getParent(source);
+			var ignoreParent = false;
 			var validLayout = true;
 			
-			// Ignores parent if it has a stack layout
+			// Ignores parent if it has a stack layout or if it is a table or row
 			if (graph.layoutManager != null)
 			{
 				var layout = graph.layoutManager.getLayout(targetParent);
@@ -2335,29 +2341,62 @@ Sidebar.prototype.dropAndConnect = function(source, targets, direction, dropCell
 				if (layout != null && layout.constructor == mxStackLayout)
 				{
 					validLayout = false;
-
-					var tmp = graph.view.getState(targetParent);
-					
-					// Offsets by parent position
-					if (tmp != null)
-					{
-						var offset = new mxPoint((tmp.x / graph.view.scale - graph.view.translate.x),
-								(tmp.y / graph.view.scale - graph.view.translate.y));
-						geo.x += offset.x;
-						geo.y += offset.y;
-						var pt = geo.getTerminalPoint(false);
-						
-						if (pt != null)
-						{
-							pt.x += offset.x;
-							pt.y += offset.y;
-						}
-					}
 				}
 			}
 			
-			var dx = geo2.x;
-			var dy = geo2.y;
+			// Checks if another container is at the drop location
+			var dx = 0;
+			var dy = 0;
+			var tmp = graph.view.getState(targetParent);
+			
+			// Offsets by parent position
+			if (tmp != null)
+			{
+				var offset = new mxPoint((tmp.x / graph.view.scale - graph.view.translate.x),
+					(tmp.y / graph.view.scale - graph.view.translate.y));
+				dx = offset.x;
+				dy = offset.y;
+
+				var pt = geo.getTerminalPoint(false);
+				
+				if (pt != null)
+				{
+					pt.x += offset.x;
+					pt.y += offset.y;
+				}
+			}
+			
+			var useParent = !graph.isTableRow(source) && !graph.isTableCell(source) &&
+				(graph.model.isEdge(source) || (sourceGeo != null &&
+				!sourceGeo.relative && validLayout));
+			var tempTarget = graph.getCellAt((geo.x + dx + graph.view.translate.x) * graph.view.scale,
+				(geo.y + dy + graph.view.translate.y) * graph.view.scale);
+			
+			if (tempTarget != null && tempTarget != targetParent &&
+				(graph.isContainer(tempTarget) || graph.isSwimlane(tempTarget)))
+			{
+				tmp = graph.view.getState(tempTarget);
+			
+				// Offsets by new parent position
+				if (tmp != null)
+				{
+					var offset = new mxPoint((tmp.x / graph.view.scale - graph.view.translate.x),
+						(tmp.y / graph.view.scale - graph.view.translate.y));
+					targetParent = tempTarget;
+					
+					geo.x -= offset.x - dx;
+					geo.y -= offset.y - dy;
+					useParent = true;
+				}
+			}
+			else if (!validLayout || graph.isTableRow(source) || graph.isTableCell(source))
+			{
+				geo.x += dx;
+				geo.y += dy;
+			}
+
+			dx = geo2.x;
+			dy = geo2.y;
 			
 			// Ignores geometry of edges
 			if (graph.model.isEdge(targets[dropCellIndex]))
@@ -2366,9 +2405,8 @@ Sidebar.prototype.dropAndConnect = function(source, targets, direction, dropCell
 				dy = 0;
 			}
 			
-			var useParent = graph.model.isEdge(source) || (sourceGeo != null && !sourceGeo.relative && validLayout);
 			targets = graph.importCells(targets, (geo.x - (useParent ? dx : 0)),
-					(geo.y - (useParent ? dy : 0)), (useParent) ? targetParent : null);
+				(geo.y - (useParent ? dy : 0)), (useParent) ? targetParent : null);
 			tmp = targets;
 			
 			if (graph.model.isEdge(source))
@@ -2852,6 +2890,11 @@ Sidebar.prototype.createDragSource = function(elt, dropHandler, preview, cells, 
 			}
 			else if (currentTargetState != null && activeArrow != null)
 			{
+				if (dragSource.currentHighlight != null && dragSource.currentHighlight.state != null)
+				{
+					dragSource.currentHighlight.hide();
+				}
+				
 				var index = (graph.model.isEdge(currentTargetState.cell) || freeSourceEdge == null) ? firstVertex : freeSourceEdge;
 				var geo = sidebar.getDropAndConnectGeometry(currentTargetState.cell, cells[index], direction, cells);
 				var geo2 = (!graph.model.isEdge(currentTargetState.cell)) ? graph.getCellGeometry(currentTargetState.cell) : null;

@@ -81,7 +81,7 @@
 		editorUi.actions.addAction('new...', function()
 		{
 			var compact = editorUi.isOffline();
-			var dlg = new NewDialog(editorUi, compact);
+			var dlg = new NewDialog(editorUi, compact, !(editorUi.mode == App.MODE_DEVICE && 'chooseFileSystemEntries' in window));
 
 			editorUi.showDialog(dlg.container, (compact) ? 350 : 620, (compact) ? 70 : 440, true, true, function(cancel)
 			{
@@ -322,7 +322,7 @@
 					mxEvent.addListener(allPages, 'change', cropEnableFn);
 					mxEvent.addListener(currentPage, 'change', cropEnableFn);
 					mxEvent.addListener(selection, 'change', cropEnableFn);
-					dlgH = 240;
+					dlgH += 60;
 				}
 				else
 				{
@@ -340,20 +340,25 @@
 					}
 				}
 				
-				var includeOption = !mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp &&
+				var isDrawioWeb = !mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp &&
 					editorUi.getServiceName() == 'draw.io';
-				var include = (includeOption) ? editorUi.addCheckbox(div,
-					mxResources.get('includeCopyOfMyDiagram'), true) : null;
+
+				var transparentBkg = null, include = null;
 					
-				if (includeOption)
+				if (isDrawioWeb)
 				{
-					dlgH += 30;
+					include = editorUi.addCheckbox(div,
+							mxResources.get('includeCopyOfMyDiagram'), true);
+					transparentBkg = editorUi.addCheckbox(div,
+							mxResources.get('transparentBackground'), false);
+					
+					dlgH += 60;
 				}
 				
 				var dlg = new CustomDialog(editorUi, div, mxUtils.bind(this, function()
 				{
 					editorUi.downloadFile('pdf', null, null, !selection.checked,
-						noPages? true : !allPages.checked, !crop.checked, null, null,
+						noPages? true : !allPages.checked, !crop.checked, transparentBkg != null && transparentBkg.checked, null,
 						null, grid.checked, include != null && include.checked);
 				}), null, mxResources.get('export'));
 				editorUi.showDialog(dlg.container, 300, dlgH, true, true);
@@ -478,7 +483,7 @@
 			action.isEnabled = isGraphEnabled;
 		}
 		
-		if (isLocalStorage || mxClient.IS_CHROMEAPP)
+		if (isLocalStorage)
 		{
 			var action = editorUi.actions.addAction('showStartScreen', function()
 			{
@@ -501,37 +506,6 @@
 			return autosaveAction.isEnabled() && editorUi.editor.autosave;
 		});
 		
-		var compressedAction = editorUi.actions.addAction('compressed', function()
-		{
-			var file = editorUi.getCurrentFile();
-			
-			if (file != null)
-			{
-				if (file.isCompressed())
-				{
-					file.decompress();
-				}
-				else
-				{
-					file.compress();
-				}
-			}
-		});
-		
-		compressedAction.setToggleAction(true);
-		
-		compressedAction.setSelectedCallback(function()
-		{
-			var file = editorUi.getCurrentFile();
-			
-			return file != null && file.isCompressed();
-		});
-
-		compressedAction.isEnabled = function()
-		{
-			return editorUi.getCurrentFile() != null;
-		}
-		
 		editorUi.actions.addAction('editGeometry...', function()
 		{
 			var cells = graph.getSelectionCells();
@@ -553,75 +527,21 @@
 			}
 		}, null, null, Editor.ctrlKey + '+Shift+M');
 
-		var copiedStyles = ['rounded', 'shadow', 'dashed', 'dashPattern', 'fontFamily', 'fontSize', 'fontColor', 'fontStyle',
-			 				'align', 'verticalAlign', 'strokeColor', 'strokeWidth', 'fillColor', 'gradientColor', 'swimlaneFillColor',
-		                    'textOpacity', 'gradientDirection', 'glass', 'labelBackgroundColor', 'labelBorderColor', 'opacity',
-		                    'spacing', 'spacingTop', 'spacingLeft', 'spacingBottom', 'spacingRight', 'endFill', 'endArrow',
-		                    'endSize', 'targetPerimeterSpacing', 'startFill', 'startArrow', 'startSize', 'sourcePerimeterSpacing',
-		                    'arcSize', 'comic', 'sketch', 'fillWeight', 'hachureGap', 'hachureAngle', 'jiggle', 'disableMultiStroke',
-		                    'disableMultiStrokeFill', 'fillStyle', 'curveFitting', 'simplification', 'comicStyle'];
+		var currentStyle = null;
 		
 		editorUi.actions.addAction('copyStyle', function()
 		{
-			var state = graph.view.getState(graph.getSelectionCell());
-			
-			if (graph.isEnabled() && state != null)
+			if (graph.isEnabled() && !graph.isSelectionEmpty())
 			{
-				editorUi.copiedStyle = mxUtils.clone(state.style);
-				
-				// Handles special case for value "none"
-				var cellStyle = graph.getModel().getStyle(state.cell);
-				var tokens = (cellStyle != null) ? cellStyle.split(';') : [];
-				
-				for (var j = 0; j < tokens.length; j++)
-				{
-					var tmp = tokens[j];
-			 		var pos = tmp.indexOf('=');
-			 					 		
-			 		if (pos >= 0)
-			 		{
-			 			var key = tmp.substring(0, pos);
-			 			var value = tmp.substring(pos + 1);
-			 			
-			 			if (editorUi.copiedStyle[key] == null && value == 'none')
-			 			{
-			 				editorUi.copiedStyle[key] = 'none';
-			 			}
-			 		}
-				}
+				currentStyle = graph.copyStyle(graph.getSelectionCell())
 			}
 		}, null, null, Editor.ctrlKey + '+Shift+C');
 
 		editorUi.actions.addAction('pasteStyle', function()
 		{
-			if (graph.isEnabled() && !graph.isSelectionEmpty() && editorUi.copiedStyle != null)
+			if (graph.isEnabled() && !graph.isSelectionEmpty() && currentStyle != null)
 			{
-				graph.getModel().beginUpdate();
-				
-				try
-				{
-					var cells = graph.getSelectionCells();
-					
-					for (var i = 0; i < cells.length; i++)
-					{
-						var state = graph.view.getState(cells[i]);
-						
-						for (var j = 0; j < copiedStyles.length; j++)
-						{
-							var key = copiedStyles[j];
-							var value = editorUi.copiedStyle[key];
-							
-							if (state.style[key] != value)
-							{
-								graph.setCellStyles(key, value, [cells[i]]);
-							}
-						}
-					}
-				}
-				finally
-				{
-					graph.getModel().endUpdate();
-				}
+				graph.pasteStyle(currentStyle, graph.getSelectionCells())
 			}
 		}, null, null, Editor.ctrlKey + '+Shift+V');
 		
@@ -745,17 +665,13 @@
 
 		editorUi.actions.addAction('keyboardShortcuts...', function()
 		{
-			if (mxClient.IS_CHROMEAPP || EditorUi.isElectronApp)
-			{
-				editorUi.openLink('https://www.draw.io/shortcuts.svg');
-			}
-			else if (mxClient.IS_SVG)
+			if (mxClient.IS_SVG && !mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp)
 			{
 				editorUi.openLink('shortcuts.svg');
 			}
 			else
 			{
-				editorUi.openLink('https://www.draw.io/?lightbox=1#Uhttps%3A%2F%2Fwww.draw.io%2Fshortcuts.svg');
+				editorUi.openLink('https://viewer.diagrams.net/#Uhttps%3A%2F%2Fviewer.diagrams.net%2Fshortcuts.svg');
 			}
 		});
 
@@ -2598,7 +2514,7 @@
 				
 				if (file != null)
 				{
-					editorUi.drive.showPermissions(file.getId());
+					file.share();
 				}
 			}
 			catch (e)
@@ -2657,9 +2573,12 @@
 		
 		var insertVertex = function(value, w, h, style)
 		{
-			var pt = (graph.isMouseInsertPoint()) ? graph.getInsertPoint() : graph.getFreeInsertPoint();
-			var cell = new mxCell(value, new mxGeometry(pt.x, pt.y, w, h), style);
+			var cell = new mxCell(value, new mxGeometry(0, 0, w, h), style);
 			cell.vertex = true;
+
+			var pt = graph.getCenterInsertPoint(graph.getBoundingBoxFromGeometry([cell], true));
+			cell.geometry.x = pt.x;
+    	    cell.geometry.y = pt.y;
 		
     		graph.getModel().beginUpdate();
     		try
@@ -3338,7 +3257,7 @@
 
 			if (urlParams['embed'] != '1')
 			{
-				this.addMenuItems(menu, ['autosave', 'compressed'], parent);
+				this.addMenuItems(menu, ['autosave'], parent);
 			}
 			
 			menu.addSeparator(parent);
@@ -3490,7 +3409,8 @@
 				else
 				{
 					if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp &&
-						file != null && file.constructor != LocalFile)
+						file != null && (file.constructor != LocalFile ||
+						file.fileHandle != null))
 					{	
 						menu.addSeparator(parent);
 						var item = this.addMenuItem(menu, 'synchronize', parent);
@@ -3501,10 +3421,17 @@
 						}
 					}
 					
-					this.addMenuItems(menu, ['-', 'save', 'saveAs'], parent);
+					this.addMenuItems(menu, ['-', 'save', 'saveAs', '-'], parent);
 					
-					this.addMenuItems(menu, ['-', 'rename'], parent);
-
+					if (!mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp &&
+						editorUi.getServiceName() == 'draw.io' &&
+						!editorUi.isOfflineApp() && file != null)
+					{
+						this.addMenuItems(menu, ['share', '-'], parent);
+					}
+					
+					this.addMenuItems(menu, ['rename'], parent);
+					
 					if (editorUi.isOfflineApp())
 					{
 						if (navigator.onLine && urlParams['stealth'] != '1')

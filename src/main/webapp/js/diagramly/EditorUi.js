@@ -38,6 +38,11 @@
 	EditorUi.drawHost = window.DRAWIO_BASE_URL;
 	
 	/**
+	 * Protocol and hostname to use for embedded files. Default is https://www.draw.io
+	 */
+	EditorUi.lightboxHost = window.DRAWIO_LIGHTBOX_URL;
+	
+	/**
 	 * Switch to disable logging for mode and search terms.
 	 */
 	EditorUi.lastErrorMessage = null;
@@ -82,9 +87,9 @@
 	/**
 	 * Specifies if drafts should be saved in IndexedDB.
 	 */
-	EditorUi.enableDrafts = !mxClient.IS_CHROMEAPP && isLocalStorage &&
-		!EditorUi.isElectronApp && urlParams['drafts'] != '0';
-
+	EditorUi.enableDrafts = !mxClient.IS_CHROMEAPP && !EditorUi.isElectronApp &&
+		isLocalStorage && urlParams['drafts'] != '0';
+	
 	/**
 	 * Link for scratchpad help.
 	 */
@@ -1567,9 +1572,7 @@
 	 */
 	EditorUi.prototype.getHtml2 = function(xml, graph, title, editLink, redirect)
 	{
-		var bg = null;
-		var js = window.DRAWIO_VIEWER_URL || EditorUi.drawHost + '/js/viewer.min.js';
-		var s = '';
+		var js = window.DRAWIO_VIEWER_URL || EditorUi.drawHost + '/js/viewer-static.min.js';
 	
 		// Makes XHTML compatible
 		if (redirect != null)
@@ -1926,7 +1929,7 @@
        	
 		var bg = graph.background;
 		
-		if (format == 'png' && transparent)
+		if ((format == 'png' || format == 'pdf') && transparent)
 		{
 			bg = mxConstants.NONE;
 		}
@@ -3876,10 +3879,10 @@
 	 * @param {number} dx X-coordinate of the translation.
 	 * @param {number} dy Y-coordinate of the translation.
 	 */
-	EditorUi.prototype.alert = function(msg, fn)
+	EditorUi.prototype.alert = function(msg, fn, optionalWidth)
 	{
 		var dlg = new ErrorDialog(this, null, msg, mxResources.get('ok'), fn);
-		this.showDialog(dlg.container, 340, 100, true, false);
+		this.showDialog(dlg.container, optionalWidth || 340, 100, true, false);
 		dlg.init();
 	};
 	
@@ -4010,9 +4013,12 @@
 				
 				if (source != chk && source != label)
 				{
-					onclick();
+					if (onclick != null)
+					{
+						onclick();
+					}
+					
 					onclose();
-				
 					mxEvent.consume(e);
 				}
 				else
@@ -4139,7 +4145,7 @@
 	 * @param {number} dx X-coordinate of the translation.
 	 * @param {number} dy Y-coordinate of the translation.
 	 */
-	EditorUi.prototype.doSaveLocalFile = function(data, filename, mimeType, base64Encoded, format)
+	EditorUi.prototype.doSaveLocalFile = function(data, filename, mimeType, base64Encoded, format, defaultExtension)
 	{
 		// Appends .drawio extension for XML files with no extension
 		// to avoid the browser to automatically append .xml instead
@@ -4147,7 +4153,8 @@
 			!/(\.drawio)$/i.test(filename) &&
 			!/(\.xml)$/i.test(filename))
 		{
-			filename = filename + '.drawio';
+			defaultExtension = (defaultExtension != null) ? defaultExtension : 'drawio';
+			filename = filename + '.' + defaultExtension;
 		}
 		
 		// Newer versions of IE
@@ -4306,7 +4313,7 @@
 	 * @param {number} dx X-coordinate of the translation.
 	 * @param {number} dy Y-coordinate of the translation.
 	 */
-	EditorUi.prototype.saveLocalFile = function(data, filename, mimeType, base64Encoded, format, allowBrowser, allowTab)
+	EditorUi.prototype.saveLocalFile = function(data, filename, mimeType, base64Encoded, format, allowBrowser, allowTab, defaultExtension)
 	{
 		allowBrowser = (allowBrowser != null) ? allowBrowser : false;
 		allowTab = (allowTab != null) ? allowTab : (format != 'vsdx') && (!mxClient.IS_IOS || !navigator.standalone);
@@ -4347,7 +4354,7 @@
 				}
 				else if (mode == App.MODE_DEVICE || mode == 'download')
 				{
-					this.doSaveLocalFile(data, newTitle, mimeType, base64Encoded);
+					this.doSaveLocalFile(data, newTitle, mimeType, base64Encoded, null, defaultExtension);
 				} 
 				else if (newTitle != null && newTitle.length > 0)
 				{
@@ -4514,7 +4521,7 @@
 				   	{
 				   		this.spinner.stop();
 				   		this.handleError(e);
-				   	}));
+				   	}), null, null, null, null, null, null, null, Editor.defaultBorder);
 					
 					mxEvent.addListener(this.editor.graph.container, 'click', clickHandler);
 				   	document.body.appendChild(this.exportDialog);
@@ -5056,7 +5063,7 @@
 	 */
 	EditorUi.prototype.createLink = function(linkTarget, linkColor, allPages, lightbox, editLink, layers, url, ignoreFile, params)
 	{
-		params = (params != null) ? params : this.createUrlParameters(linkTarget, linkColor, allPages, lightbox, editLink, layers);
+		params = (params != null) ? params : this.createUrlParameters(linkTarget, linkColor, allPages, false, editLink, layers);
 		var file = this.getCurrentFile();
 		var addTitle = true;
 		var data = '';
@@ -5088,8 +5095,9 @@
 			params.push('title=' + encodeURIComponent(file.getTitle()));
 		}
 
-		return ((mxClient.IS_CHROMEAPP || EditorUi.isElectronApp || !(/.*\.draw\.io$/.test(window.location.hostname))) ?
-			EditorUi.drawHost : 'https://' + window.location.host) + '/' +
+		return ((lightbox) ? EditorUi.lightboxHost : (((mxClient.IS_CHROMEAPP ||
+			EditorUi.isElectronApp || !(/.*\.draw\.io$/.test(window.location.hostname))) ?
+			EditorUi.drawHost : 'https://' + window.location.host))) + '/' +
 			((params.length > 0) ? '?' + params.join('&') : '') + data;
 	};
 	
@@ -5184,11 +5192,11 @@
 			'https://test.draw.io/embed2.js?dev=1' :
 			EditorUi.drawHost + '/embed2.js?')) + fetchParam :
 			(((urlParams['dev'] == '1') ?
-			'https://test.draw.io/js/viewer.min.js' :
-			window.VIEWER_URL ? window.VIEWER_URL : EditorUi.drawHost + '/js/viewer.min.js'));
-		var scr = '<script type="text/javascript" src="' + s2 + '"></script>';
+			'https://test.draw.io/js/viewer-static.min.js' :
+			window.VIEWER_URL ? window.VIEWER_URL : EditorUi.drawHost + '/js/viewer-static.min.js'));
+		var src = '<script type="text/javascript" src="' + s2 + '"></script>';
 		
-		fn(value, scr);
+		fn(value, src);
 	};
 
 	/**
@@ -5416,10 +5424,18 @@
 			allPages = this.addCheckbox(div, mxResources.get('allPages'), hasPages, !hasPages);
 		}
 		
-		var lightbox = this.addCheckbox(div, mxResources.get('lightbox'), true);
+		var lightbox = this.addCheckbox(div, mxResources.get('lightbox'), true, null, null, !showFrameOption);
 		var editSection = this.addEditButton(div, lightbox);
 		var edit = editSection.getEditInput();
 
+		// Cannot disable lightbox in iframes
+		if (showFrameOption)
+		{
+			edit.style.marginLeft = lightbox.style.marginLeft;
+			lightbox.style.display = 'none';
+			dy -= 30;
+		}
+		
 		var layers = this.addCheckbox(div, mxResources.get('layers'), true);
 		layers.style.marginLeft = edit.style.marginLeft;
 		layers.style.marginBottom = '16px';
@@ -5820,7 +5836,7 @@
 			{
 				// KNOWN: Message passing does not seem to work in IE11
 				onclick = " onclick=\"(function(img){if(img.wnd!=null&&!img.wnd.closed){img.wnd.focus();}else{var r=function(evt){if(evt.data=='ready'&&evt.source==img.wnd){img.wnd.postMessage(decodeURIComponent(" +
-					"img.getAttribute('src')),'*');window.removeEventListener('message',r);}};window.addEventListener('message',r);img.wnd=window.open('" + EditorUi.drawHost + "/?client=1&lightbox=1" +
+					"img.getAttribute('src')),'*');window.removeEventListener('message',r);}};window.addEventListener('message',r);img.wnd=window.open('" + EditorUi.lightboxHost + "/?client=1" +
 					((edit) ? "&edit=_blank" : "") +
 					((layers) ? '&layers=1' : '') + "');}})(this);\"";
 				css += 'cursor:pointer;';
@@ -5843,9 +5859,6 @@
 		
 		if (this.isExportToCanvas())
 		{
-			var scale = 1;
-			var ignoreSelection = true;
-
 			this.editor.exportToCanvas(mxUtils.bind(this, function(canvas)
 		   	{
 	   			var xml = (lightbox) ? this.getFileData(true) : null;
@@ -5854,7 +5867,7 @@
 		   	}), null, null, null, mxUtils.bind(this, function(e)
 		   	{
 		   		err({message: mxResources.get('unknownError')});
-		   	}), null, true, (retina) ? 2 : 1, null, shadow);
+		   	}), null, true, (retina) ? 2 : 1, null, shadow, null, null, Editor.defaultBorder);
 		}
 		else
 		{
@@ -5944,7 +5957,7 @@
 			{
 				// KNOWN: Message passing does not seem to work in IE11
 				onclick = "onclick=\"(function(img){if(img.wnd!=null&&!img.wnd.closed){img.wnd.focus();}else{var r=function(evt){if(evt.data=='ready'&&evt.source==img.wnd){img.wnd.postMessage(decodeURIComponent(" +
-					"img.getAttribute('src')),'*');window.removeEventListener('message',r);}};window.addEventListener('message',r);img.wnd=window.open('" + EditorUi.drawHost + "/?client=1&lightbox=1" +
+					"img.getAttribute('src')),'*');window.removeEventListener('message',r);}};window.addEventListener('message',r);img.wnd=window.open('" + EditorUi.lightboxHost + "/?client=1" +
 					((edit) ? "&edit=_blank" : "") + ((layers) ? '&layers=1' : '') + "');}})(this);\"";
 				css += 'cursor:pointer;';
 			}
@@ -5979,7 +5992,7 @@
 					"svg.getAttribute('content')),'*');window.removeEventListener('message',r);}};" +
 					"window.addEventListener('message',r);" +
 					// Opens lightbox window
-					"svg.wnd=window.open('" + EditorUi.drawHost + "/?client=1&lightbox=1" +
+					"svg.wnd=window.open('" + EditorUi.lightboxHost + "/?client=1" +
 					((edit) ? "&edit=_blank" : "") + ((layers) ? '&layers=1' : '') + "');}}})(this);";
 				svgRoot.setAttribute('onclick', js);
 				css += 'cursor:pointer;';
@@ -7360,20 +7373,6 @@
 						{
 							this.editor.graph.setSelectionCells(
 								this.importXml(xml, dx, dy, crop));
-							
-							if (!this.isOffline() &&
-								(/.*\.diagrams\.net$/.test(window.location.hostname) ||
-								/.*\.appspot\.com$/.test(window.location.hostname) ||
-								/.*\.draw\.io$/.test(window.location.hostname)))
-							{
-								this.showBanner('LucidChartImportSurvey', mxResources.get('notSatisfiedWithImport'),
-									mxUtils.bind(this, function()
-								{
-									var dlg = new FeedbackDialog(this, 'Lucidchart Import Feedback', true, text);
-									this.showDialog(dlg.container, 610, 360, true, false);
-									dlg.init();
-								}));
-							}
 						}), mxUtils.bind(this, function(e)
 						{
 							this.handleError(e);
@@ -8440,6 +8439,11 @@
 		var ui = this;
 		var graph = this.editor.graph;
 		
+		if (uiTheme == 'dark')
+		{
+			graph.view.defaultGridColor = mxGraphView.prototype.defaultDarkGridColor;
+		}
+		
 		// Starts editing PlantUML data
 		graph.cellEditor.editPlantUmlData = function(cell, trigger, data)
 		{
@@ -9355,7 +9359,7 @@
 				this.dialog == null && source.nodeName != 'INPUT' && source.nodeName != 'TEXTAREA')
 			{
 				if (evt.keyCode == 224 /* FF */ || (!mxClient.IS_MAC && evt.keyCode == 17 /* Control */) ||
-					(mxClient.IS_MAC && evt.keyCode == 91 /* Meta */))
+					(mxClient.IS_MAC && (evt.keyCode == 91 || evt.keyCode == 93) /* Left/Right Meta */))
 				{
 					// Cannot use parentNode for check in IE
 					if (!restoreFocus)
@@ -10219,6 +10223,167 @@
 		
 		return cells;
 	};
+		
+	/**
+	 * Opens the given files in the editor.
+	 */
+	EditorUi.prototype.openFileHandle = function(data, name, file, temp, fileHandle)
+	{
+		if (name != null && name.length > 0)
+		{
+			if (!this.useCanvasForExport && /(\.png)$/i.test(name))
+			{
+				name = name.substring(0, name.length - 4) + '.drawio';
+			}
+			else if (/(\.pdf)$/i.test(name))
+			{
+				name = name.substring(0, name.length - 4) + '.drawio';
+			}
+			
+			var handleResult = mxUtils.bind(this, function(xml)
+			{
+				var dot = name.lastIndexOf('.');
+				
+				if (dot >= 0)
+				{
+					name = name.substring(0, name.lastIndexOf('.')) + '.drawio';
+				}
+				else
+				{
+					name = name + '.drawio';
+				}
+				
+				if (xml.substring(0, 10) == '<mxlibrary')
+				{
+					// Creates new temporary file if library is dropped in splash screen
+					if (this.getCurrentFile() == null && urlParams['embed'] != '1')
+					{
+						this.openLocalFile(this.emptyDiagramXml, this.defaultFilename, temp);
+					}
+				
+    				try
+	    			{
+    					this.loadLibrary(new LocalLibrary(this, xml, name));
+	    			}
+    				catch (e)
+	    			{
+	    				this.handleError(e, mxResources.get('errorLoadingFile'));
+	    			}
+				}
+				else
+				{
+					this.openLocalFile(xml, name, temp);
+				}
+			});
+			
+			if  (/(\.v(dx|sdx?))($|\?)/i.test(name) || /(\.vs(x|sx?))($|\?)/i.test(name))
+			{
+				this.importVisio(file, mxUtils.bind(this, function(xml)
+				{
+					this.spinner.stop();
+					handleResult(xml);
+				}));
+			}
+			else if (/(\.*<graphml )/.test(data)) 
+			{
+				this.importGraphML(data, mxUtils.bind(this, function(xml)
+				{
+					this.spinner.stop();
+					handleResult(xml);
+				}));
+			}
+			else if (Graph.fileSupport && !this.isOffline() && new XMLHttpRequest().upload &&
+				this.isRemoteFileFormat(data, name))
+			{
+				this.parseFile(file, mxUtils.bind(this, function(xhr)
+				{
+					if (xhr.readyState == 4)
+					{
+						this.spinner.stop();
+						
+						if (xhr.status >= 200 && xhr.status <= 299)
+						{
+							handleResult(xhr.responseText);
+						}
+						else
+						{
+							this.handleError({message: mxResources.get((xhr.status == 413) ?
+        						'drawingTooLarge' : 'invalidOrMissingFile')},
+        						mxResources.get('errorLoadingFile'));
+						}
+					}
+				}));
+			}
+			else if (this.isLucidChartData(data))
+			{
+				if (/(\.json)$/i.test(name))
+				{
+					name = name.substring(0, name.length - 5) + '.drawio';
+				}
+
+				// LATER: Add import step that produces cells and use callback
+				this.convertLucidChart(data, mxUtils.bind(this, function(xml)
+				{
+					this.spinner.stop();
+					this.openLocalFile(xml, name, temp);
+				}), mxUtils.bind(this, function(e)
+				{
+					this.spinner.stop();
+					this.handleError(e);
+				}));
+			}
+			else if (data.substring(0, 10) == '<mxlibrary')
+			{
+				this.spinner.stop();
+				
+				// Creates new temporary file if library is dropped in splash screen
+				if (this.getCurrentFile() == null && urlParams['embed'] != '1')
+				{
+					this.openLocalFile(this.emptyDiagramXml, this.defaultFilename, temp);
+				}
+				
+				try
+    			{
+    				this.loadLibrary(new LocalLibrary(this, data, file.name));
+    			}
+    			catch (e)
+    			{
+    				this.handleError(e, mxResources.get('errorLoadingFile'));
+    			}
+			}
+			else if (data.indexOf('PK') == 0)
+			{
+				this.importZipFile(file, mxUtils.bind(this, function(xml)
+				{
+					this.spinner.stop();
+					handleResult(xml);
+				}), mxUtils.bind(this, function()
+				{
+					this.spinner.stop();
+					this.openLocalFile(data, name, temp);
+				}));
+			}
+			else
+			{
+				if (file.type.substring(0, 9) == 'image/png')
+				{
+					data = this.extractGraphModelFromPng(data);
+				}
+				else if (file.type == 'application/pdf')
+	    		{
+					var xml = Editor.extractGraphModelFromPdf(data);
+					
+					if (xml != null)
+					{
+						data = xml;
+					}
+	    		}
+				
+				this.spinner.stop();
+				this.openLocalFile(data, name, temp, fileHandle, (fileHandle != null) ? file : null);
+			}
+		}
+	};
 	
 	/**
 	 * Opens the given files in the editor.
@@ -10237,163 +10402,7 @@
 					{
 						try
 						{
-							var data = e.target.result;
-							var name = file.name;
-							
-							if (name != null && name.length > 0)
-							{
-								if (!this.useCanvasForExport && /(\.png)$/i.test(name))
-								{
-									name = name.substring(0, name.length - 4) + '.drawio';
-								}
-								else if (/(\.pdf)$/i.test(name))
-								{
-									name = name.substring(0, name.length - 4) + '.drawio';
-								}
-								
-								var handleResult = mxUtils.bind(this, function(xml)
-								{
-									var dot = name.lastIndexOf('.');
-									
-									if (dot >= 0)
-									{
-										name = name.substring(0, name.lastIndexOf('.')) + '.drawio';
-									}
-									else
-									{
-										name = name + '.drawio';
-									}
-									
-									if (xml.substring(0, 10) == '<mxlibrary')
-									{
-										// Creates new temporary file if library is dropped in splash screen
-										if (this.getCurrentFile() == null && urlParams['embed'] != '1')
-										{
-											this.openLocalFile(this.emptyDiagramXml, this.defaultFilename, temp);
-										}
-									
-					    				try
-						    			{
-					    					this.loadLibrary(new LocalLibrary(this, xml, name));
-						    			}
-					    				catch (e)
-						    			{
-						    				this.handleError(e, mxResources.get('errorLoadingFile'));
-						    			}
-									}
-									else
-									{
-										this.openLocalFile(xml, name, temp);
-									}
-								});
-								
-								if  (/(\.v(dx|sdx?))($|\?)/i.test(name) || /(\.vs(x|sx?))($|\?)/i.test(name))
-								{
-									this.importVisio(file, mxUtils.bind(this, function(xml)
-									{
-										this.spinner.stop();
-										handleResult(xml);
-									}));
-								}
-								else if (/(\.*<graphml )/.test(data)) 
-								{
-									this.importGraphML(data, mxUtils.bind(this, function(xml)
-									{
-										this.spinner.stop();
-										handleResult(xml);
-									}));
-								}
-								else if (Graph.fileSupport && !this.isOffline() && new XMLHttpRequest().upload &&
-									this.isRemoteFileFormat(data, name))
-								{
-									this.parseFile(file, mxUtils.bind(this, function(xhr)
-									{
-										if (xhr.readyState == 4)
-										{
-											this.spinner.stop();
-											
-											if (xhr.status >= 200 && xhr.status <= 299)
-											{
-												handleResult(xhr.responseText);
-											}
-											else
-											{
-												this.handleError({message: mxResources.get((xhr.status == 413) ?
-				            						'drawingTooLarge' : 'invalidOrMissingFile')},
-				            						mxResources.get('errorLoadingFile'));
-											}
-										}
-									}));
-								}
-								else if (this.isLucidChartData(data))
-								{
-									if (/(\.json)$/i.test(name))
-									{
-										name = name.substring(0, name.length - 5) + '.drawio';
-									}
-	
-									// LATER: Add import step that produces cells and use callback
-									this.convertLucidChart(data, mxUtils.bind(this, function(xml)
-									{
-										this.spinner.stop();
-										this.openLocalFile(xml, name, temp);
-									}), mxUtils.bind(this, function(e)
-									{
-										this.spinner.stop();
-										this.handleError(e);
-									}));
-								}
-								else if (e.target.result.substring(0, 10) == '<mxlibrary')
-				    			{
-									this.spinner.stop();
-									
-									// Creates new temporary file if library is dropped in splash screen
-									if (this.getCurrentFile() == null && urlParams['embed'] != '1')
-									{
-										this.openLocalFile(this.emptyDiagramXml, this.defaultFilename, temp);
-									}
-									
-				    				try
-					    			{
-					    				this.loadLibrary(new LocalLibrary(this, e.target.result, file.name));
-					    			}
-					    			catch (e)
-					    			{
-					    				this.handleError(e, mxResources.get('errorLoadingFile'));
-					    			}
-				    			}
-								else if (data.indexOf('PK') == 0)
-								{
-									this.importZipFile(file, mxUtils.bind(this, function(xml)
-									{
-										this.spinner.stop();
-										handleResult(xml);
-									}), mxUtils.bind(this, function()
-									{
-										this.spinner.stop();
-										this.openLocalFile(data, name, temp);
-									}));
-								}
-								else
-								{
-									if (file.type.substring(0, 9) == 'image/png')
-									{
-										data = this.extractGraphModelFromPng(data);
-									}
-									else if (file.type == 'application/pdf')
-						    		{
-										var xml = Editor.extractGraphModelFromPdf(data);
-										
-										if (xml != null)
-										{
-											data = xml;
-										}
-						    		}
-									
-									this.spinner.stop();
-									this.openLocalFile(data, name, temp);
-								}
-							}
+							this.openFileHandle(e.target.result, file.name, file, temp);
 						}
 						catch (e)
 						{
@@ -10426,7 +10435,7 @@
 	/**
 	 * Shows the layers dialog if the graph has more than one layer.
 	 */
-	EditorUi.prototype.openLocalFile = function(data, name, temp)
+	EditorUi.prototype.openLocalFile = function(data, name, temp, fileHandle, desc)
 	{
 		var currentFile = this.getCurrentFile();
 		
@@ -10446,7 +10455,7 @@
 			}
 			else
 			{
-				this.fileLoaded(new LocalFile(this, data, name || this.defaultFilename, temp));
+				this.fileLoaded(new LocalFile(this, data, name || this.defaultFilename, temp, fileHandle, desc));
 			}
 		});
 
@@ -12504,7 +12513,7 @@
 	/**
 	 * Returns the number of storage options enabled
 	 */
-	EditorUi.prototype.getServiceCount = function(allowBrowser, splash)
+	EditorUi.prototype.getServiceCount = function(allowBrowser)
 	{
 		var serviceCount = 1;
 		
@@ -12513,7 +12522,7 @@
 			serviceCount++
 		}
 		
-		if (!splash && (this.dropbox != null || typeof window.DropboxClient === 'function'))
+		if	(this.dropbox != null || typeof window.DropboxClient === 'function')
 		{
 			serviceCount++
 		}
@@ -12523,17 +12532,17 @@
 			serviceCount++
 		}
 		
-		if (!splash && (this.gitHub != null))
+		if (this.gitHub != null)
 		{
 			serviceCount++
 		}
 		
-		if (!splash && (this.gitLab != null))
+		if (this.gitLab != null)
 		{
 			serviceCount++
 		}
 		
-		if (splash && allowBrowser && isLocalStorage && urlParams['browser'] == '1')
+		if (allowBrowser && isLocalStorage && urlParams['browser'] == '1')
 		{
 			serviceCount++
 		}
@@ -13020,9 +13029,19 @@
 			}
 		});
 		
+		var errWrapper = mxUtils.bind(this, function()
+		{
+	    	window.clearTimeout(timeoutThread);
+			
+			if (acceptResponse)
+			{
+				error.apply(this, arguments);
+			}
+		});
+		
 		msgMarkers = msgMarkers || {};
 		msgMarkers.callbackId = this.remoteInvokeCallbacks.length;
-		this.remoteInvokeCallbacks.push({callback: wrapper, error: error});
+		this.remoteInvokeCallbacks.push({callback: wrapper, error: errWrapper});
 		var msg = JSON.stringify({event: 'remoteInvoke', funtionName: remoteFn, functionArgs: remoteFnArgs, msgMarkers: msgMarkers});
 		
 		if (this.remoteWin != null) //remote invoke is ready
@@ -14047,6 +14066,11 @@ var CommentsWindow = function(editorUi, x, y, w, h, saveCallback)
 		mxUtils.write(commentTxtDiv, comment.content || '');
 		cdiv.appendChild(commentTxtDiv);
 		
+		if (comment.isLocked)
+		{
+			cdiv.style.opacity = '0.5';
+		}
+		
 		var actionsDiv = document.createElement('div');
 		actionsDiv.className = 'geCommentActions';
 		var actionsList = document.createElement('ul');
@@ -14148,7 +14172,7 @@ var CommentsWindow = function(editorUi, x, y, w, h, saveCallback)
 			}
 		};
 		
-		if (!readOnly && (level == 0 || canReplyToReplies))
+		if (!readOnly && !comment.isLocked && (level == 0 || canReplyToReplies))
 		{
 			addAction(mxResources.get('reply'), function()
 			{
@@ -14158,7 +14182,7 @@ var CommentsWindow = function(editorUi, x, y, w, h, saveCallback)
 		
 		var user = editorUi.getCurrentUser();
 		
-		if (user != null && user.id == comment.user.id && !readOnly)
+		if (user != null && user.id == comment.user.id && !readOnly && !comment.isLocked)
 		{
 			addAction(mxResources.get('edit'), function()
 			{
@@ -14190,25 +14214,44 @@ var CommentsWindow = function(editorUi, x, y, w, h, saveCallback)
 				{
 					showBusy(cdiv);
 					
-					comment.deleteComment(function()
+					comment.deleteComment(function(markedOnly)
 					{
-						var replies = collectReplies(comment).replies;
-						
-						for (var i = 0; i < replies.length; i++)
+						if (markedOnly === true)
 						{
-							listDiv.removeChild(replies[i]);
-						}
-						
-						for (var i = 0; i < parentArr.length; i++)
-						{
-							if (parentArr[i] == comment) 
+							var commentTxt = cdiv.querySelector('.geCommentTxt');
+							commentTxt.innerHTML = '';
+							mxUtils.write(commentTxt, mxResources.get('msgDeleted'));
+							
+							var actions = cdiv.querySelectorAll('.geCommentAction');
+							
+							for (var i = 0; i < actions.length; i++)
 							{
-								parentArr.splice(i, 1);
-								break;
+								actions[i].parentNode.removeChild(actions[i]);
 							}
+							
+							showDone(cdiv);
+							cdiv.style.opacity = '0.5';
 						}
-						
-						noComments.style.display = (listDiv.getElementsByTagName('div').length == 0) ? 'block' : 'none';
+						else
+						{
+							var replies = collectReplies(comment).replies;
+							
+							for (var i = 0; i < replies.length; i++)
+							{
+								listDiv.removeChild(replies[i]);
+							}
+							
+							for (var i = 0; i < parentArr.length; i++)
+							{
+								if (parentArr[i] == comment) 
+								{
+									parentArr.splice(i, 1);
+									break;
+								}
+							}
+							
+							noComments.style.display = (listDiv.getElementsByTagName('div').length == 0) ? 'block' : 'none';
+						}
 					}, function(err)
 					{
 						showError(cdiv);
@@ -14219,7 +14262,7 @@ var CommentsWindow = function(editorUi, x, y, w, h, saveCallback)
 			}, comment.isResolved);
 		}
 		
-		if (!readOnly && level == 0) //Resolve is a top-level action only
+		if (!readOnly && !comment.isLocked && level == 0) //Resolve is a top-level action only
 		{
 			function toggleResolve(evt)
 			{

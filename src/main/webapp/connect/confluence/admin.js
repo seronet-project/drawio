@@ -261,7 +261,9 @@ var MassDiagramsProcessor = function(macroName, readableName, attParams, process
 	var start = 0, limit = 100;
 	var regExps = getMacroRegExps(macroName, attParams);
 	
-	
+	var pagesCount = 0, pagesIndex = 0;
+	var pagesList = [], pagesMap = {};
+
 	function searchContentForMacro(onSuccess, onError) 
 	{
 		//keeping the block of AP.require to minimize the number of changes!
@@ -272,14 +274,18 @@ var MassDiagramsProcessor = function(macroName, readableName, attParams, process
 		        contentType: 'application/json;charset=UTF-8',
 		        success: function(resp) {
 		        	var resp = JSON.parse(resp);
-		        	
-		        	var list = resp.results.filter(function(p)
+		        	var list = resp.results;
+    				
+		        	//Ensure pages list is unique since search api return duplicates
+    				for (var i = 0; i < list.length; i++)
 					{
-						return p.status != 'trashed'; //remove trashed pages
-					});
-					
-					Array.prototype.push.apply(pagesList, list);
-					pagesCount += list.length;
+    					if (!pagesMap[list[i].id] && list[i].status != 'trashed') //remove duplicates & trashed pages
+						{
+    						pagesList.push(list[i]);
+    						pagesMap[list[i].id] = true;
+    						pagesCount++;
+						}
+					}
 					
 					//Support pageing
 					if (resp._links && resp._links.next) 
@@ -312,9 +318,6 @@ var MassDiagramsProcessor = function(macroName, readableName, attParams, process
 		};
 	};
 
-	var pagesCount = 0, pagesIndex = 0;
-	var pagesList = [];
-	
 	//Process pages one at a time
 	function processPage()
 	{
@@ -415,16 +418,57 @@ var GliffyMassImporter = function(logDiv, doneFn)
 	link.href = location.href;
 	link.href = link.href; //to have 'host' populated under IE
 	var hostUrl = link.protocol + '//' + link.hostname;
+	var convertedDiagrams = {};
 
 	function importGliffyAtt(pageId, pageType, spaceKey, params, macroId, success, error, skip) 
 	{
 		var attName = params[0];
+		var linkedPageId = params[1];
+		pageId = linkedPageId || pageId;
 		
+		if (!attName)
+		{ 	//This is a draft diagram that is stored on Gliffy servers and only accessed by 'macroId' and requires authentication
+			error({macroId:macroId});
+			return;
+		}
+		
+		var diagKey = pageId + '-' + attName;
 		logDiv.append($('<div>' + mxResources.get('confAGliffyDiagFound', [AC.htmlEntities(attName), 'Gliffy']) + '...</div>'));
-		
-		//Get the latest version (no version parameter)
-		//keeping the block of AP.require to minimize the number of changes!
+
+		function localSuccess(info)
 		{
+			var attInfo = {
+				name: attName + ".drawio",
+				macroId: macroId,
+				contentId: info.contentId,
+				contentVer: info.contentVer,
+				//TODO get the actual width & height
+				//TODO It works with this hardcoded number, but it is better to get the actual value
+				width: 500,
+				height: 500
+			};
+			
+			if (linkedPageId != null)
+			{
+				attInfo.isInc = true;
+				attInfo.pageId = linkedPageId;
+				
+				logDiv.append($('<div>' + mxResources.get('confAGliffyDiagImported', [AC.htmlEntities(attName), 'Gliffy (Linked)']) + '</div>'));
+			}
+			else
+			{
+				attInfo.revision = info.revision;
+				attInfo.previewPng = attName + ".png";
+				
+				logDiv.append($('<div>' + mxResources.get('confAGliffyDiagImported', [AC.htmlEntities(attName), 'Gliffy']) + '</div>'));
+			}
+			
+			success(attInfo);
+		};
+		
+		function convertDiagram()
+		{
+			//Get the latest version (no version parameter)
 			AP.request({
 				url:  "/download/attachments/" + pageId + "/"
 					+ encodeURIComponent(attName.trim()), //Conf removes spaces from attachments file names
@@ -452,37 +496,28 @@ var GliffyMassImporter = function(logDiv, doneFn)
 								function(resp)
 								{
 				 					resp = JSON.parse(resp);
-				 					
-				 					var attInfo = {
-				 						name: attName + ".drawio", 
-				 						revision: resp.results[0].version.number,
-				 						macroId: macroId,
-				 						previewPng: attName + ".png",
-					 					//TODO get the actual width & height
-				 						//TODO It works with this hardcoded number, but it is better to get the actual value
-		 								width: 500,
-		 								height: 500
-			 						};
+				 					var revision = resp.results[0].version.number;
 				 					
 				 					//Add custom content
-				 					AC.saveCustomContent(spaceKey, pageId, pageType, attName + ".drawio", attName + ".drawio", attInfo.revision, null, null, 
+				 					AC.saveCustomContent(spaceKey, pageId, pageType, attName + ".drawio", attName + ".drawio", revision, null, null, 
 				 							function(responseText)
 				 							{
-				 								logDiv.append($('<div>' + mxResources.get('confAGliffyDiagImported', [AC.htmlEntities(attName), 'Gliffy']) + '</div>'));
-				 								
 				 								var content = JSON.parse(responseText);
 												
-				 								attInfo.contentId = content.id;
-				 								attInfo.contentVer = content.version.number;
-												
-							 					success(attInfo);
+							 					var info = {
+							 						revision: revision,
+							 						contentId: content.id,
+							 						contentVer: content.version.number
+							 					};
+							 					
+							 					convertedDiagrams[diagKey] = info;
+							 					localSuccess(info);
 				 							}, function(err)
 				 							{
 				 								logDiv.append($('<div style="color:red">' + mxResources.get('confASavingImpGliffyFailed', [AC.htmlEntities(attName), 'Gliffy']) + '</div>'));
 							 					console.log(err);
 							 					error({macroId:macroId});
 				 							});
-				 					
 				 				}, function(err) 
 				 				{
 				 					logDiv.append($('<div style="color:red">' + mxResources.get('confASavingImpGliffyFailed', [AC.htmlEntities(attName), 'Gliffy']) + '</div>'));
@@ -509,11 +544,50 @@ var GliffyMassImporter = function(logDiv, doneFn)
 				}
 			});
 		};
+		
+		var info = convertedDiagrams[diagKey];
+		
+		if (info === true) //Pending, wait
+		{
+			var trials = 0;
+			
+			function waitForConversion()
+			{
+				trials++;
+				info = convertedDiagrams[diagKey];
+				
+				if (info !== true)
+				{
+					localSuccess(info)
+				}
+				else if (trials < 15) //4.5 second wait, during test. It took about 2 sec
+				{
+					setTimeout(waitForConversion, 300);
+				}
+				else
+				{
+					//Try conversion again in case an error occured
+					convertDiagram();
+				}
+			}
+			
+			setTimeout(waitForConversion, 300);
+		}
+		else if (info != null)
+		{
+			//Diagram is already converted, so directly convert the macro
+			localSuccess(info);
+		}
+		else
+		{
+			convertedDiagrams[diagKey] = true;
+			convertDiagram();
+		}
 	};
 	
 	logDiv.html("<br>");
 	
-	MassDiagramsProcessor('gliffy', 'Gliffy', ['name'], importGliffyAtt, logDiv, doneFn);
+	MassDiagramsProcessor('gliffy', 'Gliffy', ['name', 'pageid'], importGliffyAtt, logDiv, doneFn);
 };
 
 function cleanBrokenCustomContents(logDiv, callback, error)
