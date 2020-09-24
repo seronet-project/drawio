@@ -11844,6 +11844,7 @@
         		var lookups = {};
         		
         		// Default values
+        		var vars = null;
         		var style = null;
         		var styles = null;
         		var stylename = null;
@@ -11956,6 +11957,10 @@
 		    				else if (key == 'styles' && value.length > 0 && value != '-')
 		    				{
 		    					styles = JSON.parse(value);
+		    				}
+		    				else if (key == 'vars' && value.length > 0 && value != '-')
+		    				{
+		    					vars = JSON.parse(value);
 		    				}
 		    				else if (key == 'identity' && value.length > 0 && value != '-')
 		    				{
@@ -12129,7 +12134,7 @@
 						}
 
 						graph.setAttributeForCell(newCell, 'placeholders', '1');
-						newCell.style = graph.replacePlaceholders(newCell, newCell.style);
+						newCell.style = graph.replacePlaceholders(newCell, newCell.style, vars);
 
 						if (exists)
 						{
@@ -12205,7 +12210,7 @@
 	    					
 	    					if (parent != null)
 	    					{
-	    						parent.style = graph.replacePlaceholders(parent, parentstyle);
+	    						parent.style = graph.replacePlaceholders(parent, parentstyle, vars);
 	    						graph.addCell(cell, parent);
 	    					}
 	    					else
@@ -12269,7 +12274,7 @@
 				    							var placeholders = ((edge.placeholders == 'target') ==
 				    								!edge.invert) ? ref : realCell;
 				    							var style = (edge.style != null) ?
-				    								graph.replacePlaceholders(placeholders, edge.style) :
+				    								graph.replacePlaceholders(placeholders, edge.style, vars) :
 				    								graph.createCurrentEdgeStyle();
 
 				    							var edgeCell = graph.insertEdge(null, null, label || '', (edge.invert) ?
