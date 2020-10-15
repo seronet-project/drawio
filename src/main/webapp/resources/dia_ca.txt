@@ -555,6 +555,7 @@ pan=Panoràmica
 panTooltip=Espai+Arrossegueu per fer panoràmica
 paperSize=Mida del paper
 pattern=Patró
+parallels=Parallels
 paste=Enganxa
 pasteHere=Enganxa aquí
 pasteSize=Paste Size

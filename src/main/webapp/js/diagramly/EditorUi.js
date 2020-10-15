@@ -5810,11 +5810,11 @@
 		
 		var include = this.addCheckbox(div, mxResources.get('includeCopyOfMyDiagram'), defaultInclude, null, null, format != 'jpeg');
 		var hasPages = this.pages != null && this.pages.length > 1;
-		var allPages = this.addCheckbox(div, (hasPages) ? mxResources.get('allPages') : '', hasPages, !hasPages, null, format != 'jpeg');
+		var allPages = this.addCheckbox(div, (hasPages && format != 'svg') ? mxResources.get('allPages') : '', hasPages, !hasPages, null, format != 'jpeg');
 		allPages.style.marginLeft = '24px';
 		allPages.style.marginBottom = '16px';
 		
-		if (!hasPages)
+		if (!hasPages || format == 'svg')
 		{
 			allPages.style.display = 'none';
 		}
@@ -12336,6 +12336,7 @@
 					{
 						var edgeLayout = new mxParallelEdgeLayout(graph);
 						edgeLayout.spacing = edgespacing;
+						edgeLayout.checkOverlap = true;
 				
 						var postProcess = function()
 						{
@@ -12378,6 +12379,7 @@
 						else if (layout == 'circle')
 						{
 							var circleLayout = new mxCircleLayout(graph);
+							circleLayout.disableEdgeStyle = false;
 		    				circleLayout.resetEdges = false;
 		    				
 		    				var circleLayoutIsVertexIgnored = circleLayout.isVertexIgnored;
@@ -12446,6 +12448,7 @@
 			    			
 		    				var organicLayout = new mxFastOrganicLayout(graph);
 		    				organicLayout.forceConstant = nodespacing * 3;
+		    				organicLayout.disableEdgeStyle = false;
 		    				organicLayout.resetEdges = false;
 		
 		    				var organicLayoutIsVertexIgnored = organicLayout.isVertexIgnored;
@@ -12457,9 +12460,6 @@
 		    						mxUtils.indexOf(cells, vertex) < 0;
 		    				};
 		
-		    				var edgeLayout = new mxParallelEdgeLayout(graph);
-		    				edgeLayout.spacing = edgespacing;
-		    				
 		    	    		this.executeLayout(function()
 		    	    		{
 		    	    			organicLayout.execute(graph.getDefaultParent());
