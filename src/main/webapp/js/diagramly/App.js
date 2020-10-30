@@ -79,6 +79,12 @@ App = function(editor, container, lightbox)
 	// Global helper method to deal with popup blockers
 	window.openWindow = mxUtils.bind(this, function(url, pre, fallback)
 	{
+		if (urlParams['openInSameWin'] == '1')
+		{
+			fallback();
+			return;
+		}
+		
 		var wnd = null;
 		
 		try
@@ -254,6 +260,7 @@ App.DROPINS_URL = 'https://www.dropbox.com/static/api/2/dropins.js';
  * But it doesn't work for IE11, so we fallback to the original one
  */
 App.ONEDRIVE_URL = mxClient.IS_IE11? 'https://js.live.net/v7.2/OneDrive.js' : window.DRAWIO_BASE_URL + '/js/onedrive/OneDrive.js';
+App.ONEDRIVE_INLINE_PICKER_URL = window.DRAWIO_BASE_URL + '/js/onedrive/mxODPicker.js';
 
 /**
  * Trello URL
@@ -498,7 +505,17 @@ App.getStoredMode = function()
 						if (App.mode == App.MODE_ONEDRIVE || (window.location.hash != null &&
 							window.location.hash.substring(0, 2) == '#W'))
 						{
-							mxscript(App.ONEDRIVE_URL);
+							if (urlParams['inlinePicker'] == '1')
+							{
+								mxscript(App.ONEDRIVE_INLINE_PICKER_URL, function()
+								{
+									window.OneDrive = {}; //Needed to allow code that check its existance to work BUT it's not used 
+								});
+							}
+							else
+							{
+								mxscript(App.ONEDRIVE_URL);
+							}
 						}
 						else if (urlParams['chrome'] == '0')
 						{
@@ -876,7 +893,18 @@ App.main = function(callback, createUi)
 					urlParams['od'] == '1')) && (navigator.userAgent == null ||
 					navigator.userAgent.indexOf('MSIE') < 0 || document.documentMode >= 10))))
 				{
-					mxscript(App.ONEDRIVE_URL, window.DrawOneDriveClientCallback);
+					if (urlParams['inlinePicker'] == '1')
+					{
+						mxscript(App.ONEDRIVE_INLINE_PICKER_URL, function()
+						{
+							window.OneDrive = {}; //Needed to allow code that check its existance to work BUT it's not used 
+							window.DrawOneDriveClientCallback();
+						});
+					}
+					else
+					{
+						mxscript(App.ONEDRIVE_URL, window.DrawOneDriveClientCallback);
+					}
 				}
 				// Disables client
 				else if (typeof window.OneDrive === 'undefined')
@@ -3457,49 +3485,56 @@ App.prototype.loadFileSystemEntry = function(fileHandle, success, error)
 		this.handleError(e);
 	});
 	
-	fileHandle.getFile().then(mxUtils.bind(this, function(file)
+	try
 	{
-		var reader = new FileReader();
-				
-		reader.onload = mxUtils.bind(this, function(e)
+		fileHandle.getFile().then(mxUtils.bind(this, function(file)
 		{
-			try
-			{
-				if (success != null)
-				{
-					var data = e.target.result;
+			var reader = new FileReader();
 					
-					if (file.type.substring(0, 6) == 'image/')
-					{
-						data = this.extractGraphModelFromPng(data);
-					}
-
-					success(new LocalFile(this, data, file.name, null, fileHandle, file));
-				}
-				else
-				{
-					this.openFileHandle(e.target.result, file.name, file, false, fileHandle);
-				}
-			}
-			catch(e)
+			reader.onload = mxUtils.bind(this, function(e)
 			{
-				error(e);
+				try
+				{
+					if (success != null)
+					{
+						var data = e.target.result;
+						
+						if (file.type.substring(0, 6) == 'image/')
+						{
+							data = this.extractGraphModelFromPng(data);
+						}
+	
+						success(new LocalFile(this, data, file.name, null, fileHandle, file));
+					}
+					else
+					{
+						this.openFileHandle(e.target.result, file.name, file, false, fileHandle);
+					}
+				}
+				catch(e)
+				{
+					error(e);
+				}
+			});
+			
+			reader.onerror = error;
+			
+			if ((file.type.substring(0, 5) === 'image' ||
+				file.type === 'application/pdf') &&
+				file.type.substring(0, 9) !== 'image/svg')
+			{
+				reader.readAsDataURL(file);
 			}
-		});
-		
-		reader.onerror = error;
-		
-		if ((file.type.substring(0, 5) === 'image' ||
-			file.type === 'application/pdf') &&
-			file.type.substring(0, 9) !== 'image/svg')
-		{
-			reader.readAsDataURL(file);
-		}
-		else
-		{
-			reader.readAsText(file);
-		}
-	}), error);
+			else
+			{
+				reader.readAsText(file);
+			}
+		}), error);
+	}
+	catch (e)
+	{
+		error(e);
+	}
 };
 
 /**
@@ -3524,7 +3559,8 @@ App.prototype.createFileSystemOptions = function(name)
 	{
 		var obj = {description: mxResources.get(this.editor.diagramFileTypes[i].description) +
 			((mxClient.IS_MAC) ? ' (.' + this.editor.diagramFileTypes[i].extension + ')' : ''),
-			extensions: [this.editor.diagramFileTypes[i].extension]};
+			accept: {}};
+		obj.accept[this.editor.diagramFileTypes[i].mimeType] = ['.' + this.editor.diagramFileTypes[i].extension];
 		
 		if (this.editor.diagramFileTypes[i].extension == temp)
 		{
@@ -3532,18 +3568,25 @@ App.prototype.createFileSystemOptions = function(name)
 		}
 		else
 		{
-			ext.push(obj);
+			if (this.editor.diagramFileTypes[i].extension == temp)
+			{
+				ext.splice(0, 0, obj);
+			}
+			else
+			{
+				ext.push(obj);
+			}
 		}
 	}
 	
 	// TODO: Specify default filename
-	return {type: 'save-file', accepts: ext, fileName: name};
+	return {types: ext, fileName: name};
 };
 
 /**
  * Loads the given file handle as a local file.
  */
-App.prototype.chooseFileSystemEntries = function(success, error, opts)
+App.prototype.showSaveFilePicker = function(success, error, opts)
 {
 	error = (error != null) ? error : mxUtils.bind(this, function(e)
 	{
@@ -3555,13 +3598,15 @@ App.prototype.chooseFileSystemEntries = function(success, error, opts)
 	
 	opts = (opts != null) ? opts : this.createFileSystemOptions();
 	
-	// LATER: Specify default name via options
-	window.chooseFileSystemEntries(opts).then(mxUtils.bind(this, function(fileHandle)
+	window.showSaveFilePicker(opts).then(mxUtils.bind(this, function(fileHandle)
 	{
-		fileHandle.getFile().then(mxUtils.bind(this, function(desc)
+		if (fileHandle != null)
 		{
-			success(fileHandle, desc);
-		}), error);
+			fileHandle.getFile().then(mxUtils.bind(this, function(desc)
+			{
+				success(fileHandle, desc);
+			}), error);
+		}
 	}), error);
 };
 
@@ -3596,13 +3641,14 @@ App.prototype.pickFile = function(mode)
 			{
 				peer.pickFile();
 			}
-			else if (mode == App.MODE_DEVICE && 'chooseFileSystemEntries' in window)
+			else if (mode == App.MODE_DEVICE && 'showOpenFilePicker' in window)
 			{
-				window.chooseFileSystemEntries().then(mxUtils.bind(this, function(fileHandle)
+				window.showOpenFilePicker().then(mxUtils.bind(this, function(fileHandles)
 				{
-					if (this.spinner.spin(document.body, mxResources.get('loading')))
+					if (fileHandles != null && fileHandles.length > 0 &&
+						this.spinner.spin(document.body, mxResources.get('loading')))
 					{
-						this.loadFileSystemEntry(fileHandle);
+						this.loadFileSystemEntry(fileHandles[0]);
 					}
 				}), mxUtils.bind(this, function(e)
 				{
@@ -4083,7 +4129,7 @@ App.prototype.saveFile = function(forceDialog, success)
 		}
 		else if (file != null && file.constructor == LocalFile && file.fileHandle != null)
 		{
-			this.chooseFileSystemEntries(mxUtils.bind(this, function(fileHandle, desc)
+			this.showSaveFilePicker(mxUtils.bind(this, function(fileHandle, desc)
 			{
 				file.invalidFileHandle = null;
 				file.fileHandle = fileHandle;
@@ -4138,9 +4184,9 @@ App.prototype.saveFile = function(forceDialog, success)
 						
 						if (prev == null && mode == App.MODE_DEVICE)
 						{
-							if (file != null && 'chooseFileSystemEntries' in window)
+							if (file != null && 'showSaveFilePicker' in window)
 							{
-								this.chooseFileSystemEntries(mxUtils.bind(this, function(fileHandle, desc)
+								this.showSaveFilePicker(mxUtils.bind(this, function(fileHandle, desc)
 								{
 									file.fileHandle = fileHandle;
 									file.mode = App.MODE_DEVICE;
@@ -4430,11 +4476,11 @@ App.prototype.createFile = function(title, data, libs, mode, done, replace, fold
 					this.fileCreated(file, libs, replace, done, clibs);
 				}), error);
 			}
-			else if (!tempFile && mode == App.MODE_DEVICE && 'chooseFileSystemEntries' in window)
+			else if (!tempFile && mode == App.MODE_DEVICE && 'showSaveFilePicker' in window)
 			{
 				complete();
 				
-				this.chooseFileSystemEntries(mxUtils.bind(this, function(fileHandle, desc)
+				this.showSaveFilePicker(mxUtils.bind(this, function(fileHandle, desc)
 				{
 					var file = new LocalFile(this, data, desc.name, null, fileHandle, desc);
 					
@@ -4635,6 +4681,11 @@ App.prototype.fileCreated = function(file, libs, replace, done, clibs)
  */
 App.prototype.loadFile = function(id, sameWindow, file, success, force)
 {
+	if (urlParams['openInSameWin'] == '1')
+	{
+		sameWindow = true;
+	}
+	
 	this.hideDialog();
 	
 	var fn2 = mxUtils.bind(this, function()
@@ -5802,7 +5853,7 @@ App.prototype.showAuthDialog = function(peer, showRememberOption, fn, closeFn)
 	{
 		if (closeFn != null)
 		{
-			closeFn();
+			closeFn(cancel);
 		}
 		
 		if (cancel && this.getCurrentFile() == null && this.dialog == null)
