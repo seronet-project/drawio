@@ -1110,3 +1110,4 @@ loadAttFailed=Failed to load attachment "{1}"
 embedDrawDiag=Embed draw.io Diagram
 addDiagram=Add Diagram
 embedDiagram=Embed Diagram
+editOwningPg=Edit owning page
