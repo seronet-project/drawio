@@ -1123,3 +1123,4 @@ importingDrafts=Importing {1} Diagrams in drafts
 processingDrafts=Processing drafts
 updatingDrafts=Updating drafts
 updateDrafts=Update Drafts
+notifications=Notifications
